@@ -79,5 +79,6 @@ source "drivers/clock_control/Kconfig.xec"
 source "drivers/clock_control/Kconfig.rts5817"
 
 rsource "Kconfig.xuantie_cpu"
+rsource "Kconfig.a210"
 
 endif # CLOCK_CONTROL

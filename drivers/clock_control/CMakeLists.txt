@@ -152,3 +152,5 @@ zephyr_library_sources_ifdef(CONFIG_SOC_SERIES_AGILEX clock_agilex_ll.c)
 
 zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_XUANTIE_CPU
   clock_control_xuantie_cpu.c cpu_dvfs.c xuantie_cpu_pll.c)
+zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_A210
+  clock_control_a210.c a210_clock_tree.c)
