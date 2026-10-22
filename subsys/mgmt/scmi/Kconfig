@@ -17,6 +17,12 @@ config SCMI_SERVER_CLOCK
 	  and enable control. Asynchronous requests and notifications are not
 	  advertised.
 
+config SCMI_SERVER_RESET
+	bool "Reset Domain protocol"
+	help
+	  Serve Reset Domain 3.0 discovery and synchronous reset requests.
+	  Explicit assertion and complete reset sequences use platform callbacks.
+
 config SCMI_SERVER_PERFORMANCE
 	bool "Performance protocol"
 	help
