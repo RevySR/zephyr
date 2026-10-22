@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+description: SLG51000 voltage output selected by the reg output identifier
+compatible: "dlg,slg51000-regulator"
+include: [regulator.yaml, base.yaml]
+properties:
+  reg:
+    required: true
+  regulator-min-microvolt:
+    required: true
+  regulator-max-microvolt:
+    required: true
+  settling-time-us:
+    type: int
+    required: true
+  slg-high-range:
+    type: boolean

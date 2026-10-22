@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+config REGULATOR_SLG51000
+	bool "SLG51000 regulator"
+	default y
+	depends on !MULTITHREADING
+	depends on DT_HAS_DLG_SLG51000_REGULATOR_ENABLED
+	depends on I2C && COUNTER
+	select REGULATOR_PMIC_COMMON
+	select REGULATOR_PMIC_BACKEND
