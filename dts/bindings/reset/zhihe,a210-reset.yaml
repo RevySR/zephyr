@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+description: A210 AP reset banks managed by E902
+compatible: "zhihe,a210-reset"
+include: [base.yaml, reset-controller.yaml]
+properties:
+  reg:
+    required: true
+  gpu-status-reg:
+    type: int
+    required: true
+  vo-status-reg:
+    type: int
+    required: true
+  "#reset-cells":
+    const: 1
+reset-cells:
+  - id
