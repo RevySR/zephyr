@@ -10,6 +10,12 @@ menuconfig SCMI_SERVER
 
 if SCMI_SERVER
 
+config SCMI_SERVER_POWER
+	bool "Power Domain protocol"
+	help
+	  Serve Power Domain 3.0 discovery and synchronous device on/off requests.
+	  Platform providers serialize domain transitions and report their state.
+
 config SCMI_SERVER_CLOCK
 	bool "Clock protocol"
 	help

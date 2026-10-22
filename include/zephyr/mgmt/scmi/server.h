@@ -58,6 +58,8 @@ struct scmi_server {
 	uint16_t clock_count;
 	const struct scmi_reset_domain *reset_domains;
 	uint16_t reset_count;
+	const struct scmi_power_domain *power_domains;
+	uint16_t power_count;
 	/* Optional on-demand descriptions for platforms with many resources. */
 	void *resource_context;
 	int (*clock_lookup)(void *context, uint32_t id, struct scmi_clock *clock, char name[16]);
