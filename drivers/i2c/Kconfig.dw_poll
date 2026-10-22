@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+config I2C_DW_POLL
+	bool "DesignWare polling I2C"
+	default y
+	depends on DT_HAS_SNPS_DESIGNWARE_I2C_POLL_ENABLED
+	depends on RISCV && !MULTITHREADING
+	depends on COUNTER
