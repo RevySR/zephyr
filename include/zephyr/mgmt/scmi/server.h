@@ -69,6 +69,8 @@ struct scmi_server {
 	int (*sensor_lookup)(void *context, uint32_t id, struct scmi_sensor *sensor, char name[16]);
 	void *system_context;
 	int (*system_request)(void *context, uint32_t state);
+	/* Set when a P2A channel can carry notifications to the agent. */
+	bool notifications;
 };
 
 /* Input and output are distinct byte buffers, including the SCMI header. */
@@ -92,6 +94,10 @@ struct scmi_smt_io {
 void scmi_smt_init(const struct scmi_smt_io *io);
 /* Call once per received doorbell, never merely upon observing BUSY. */
 bool scmi_smt_respond(const struct scmi_smt_io *io, const struct scmi_server *server);
+/* A P2A channel is free once the agent has consumed the previous message. */
+bool scmi_smt_free(const struct scmi_smt_io *io);
+/* Publish a P2A message; fails while the agent still owns the channel. */
+bool scmi_smt_send(const struct scmi_smt_io *io, const uint8_t *message, size_t size);
 
 static inline uint32_t scmi_get_le32(const uint8_t *p)
 {
