@@ -1,0 +1,6 @@
+tests:
+  drivers.regulator.pmic_build:
+    build_only: true
+    tags: [regulator]
+    platform_allow: [milkv_meles/th1520/e902]
+    integration_platforms: [milkv_meles/th1520/e902]

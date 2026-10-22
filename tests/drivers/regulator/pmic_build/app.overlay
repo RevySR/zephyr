@@ -1,0 +1,23 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* Synthetic coverage only. These devices are not Meles board wiring. */
+&aon_i2c {
+	pmic@75 {
+		compatible = "dlg,slg51000";
+		reg = <0x75>;
+		timeout-counter = <&aon_timebase>;
+		regulators {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			regulator@0 {
+				compatible = "dlg,slg51000-regulator";
+				reg = <0>;
+				regulator-name = "test-output";
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <1200000>;
+				settling-time-us = <250>;
+			};
+		};
+	};
+
+
+};
