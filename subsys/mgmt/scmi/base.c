@@ -39,6 +39,11 @@ size_t scmi_base_dispatch(const struct scmi_server *server, const uint8_t *reque
 	size_t size = 8;
 	size_t expected;
 
+#if defined(CONFIG_SCMI_SERVER_POWER)
+	if (server->power_count) {
+		protocols[protocol_count++] = SCMI_POWER_PROTOCOL;
+	}
+#endif
 	if (PERFORMANCE_AVAILABLE(server)) {
 		protocols[protocol_count++] = SCMI_PERFORMANCE_PROTOCOL;
 	}
