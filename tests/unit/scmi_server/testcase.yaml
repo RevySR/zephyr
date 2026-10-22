@@ -1,0 +1,4 @@
+tests:
+  libraries.scmi_server:
+    type: unit
+    tags: [scmi_server]

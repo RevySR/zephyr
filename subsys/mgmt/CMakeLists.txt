@@ -6,3 +6,5 @@ add_subdirectory_ifdef(CONFIG_HAWKBIT              hawkbit)
 add_subdirectory_ifdef(CONFIG_FOTA_HTTP            fota_http)
 add_subdirectory_ifdef(CONFIG_UPDATEHUB            updatehub)
 add_subdirectory_ifdef(CONFIG_OSDP                 osdp)
+
+add_subdirectory_ifdef(CONFIG_SCMI scmi)
