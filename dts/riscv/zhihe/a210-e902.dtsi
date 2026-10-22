@@ -346,6 +346,7 @@
 	chosen {
 		zephyr,sram = &sram0;
 		zephyr,scmi-shmem = &scmi_shmem;
+		zephyr,scmi-notification-shmem = &scmi_notification_shmem;
 		zephyr,scmi-mailbox = &scmi_mailbox;
 	};
 	sram0: memory@308f8000 {
@@ -360,12 +361,17 @@
 			compatible = "arm,scmi-shmem";
 			reg = <0x30907c00 0x100>;
 		};
+		scmi_notification_shmem: memory@30907d00 {
+			compatible = "arm,scmi-shmem";
+			reg = <0x30907d00 0x100>;
+		};
 	};
 	scmi_mailbox: scmi@310000 {
 		compatible = "zhihe,a210-mbox", "thead,th1520-mbox";
 		reg = <0x00310000 0x1000>, <0x00320000 0x1000>;
 		reg-names = "rx", "tx";
 		rx-channel = <0>;
+		zhihe,channel-info;
 		#mbox-cells = <1>;
 	};
 

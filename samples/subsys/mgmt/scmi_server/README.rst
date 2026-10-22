@@ -69,7 +69,8 @@ TH1520 loads at 0xffef8c00 with a 52 KiB code/data/stack budget. Its
 256-byte SCMI SMT area starts at 0xfff05c00. The image leaves the vendor
 3 KiB configuration prefix and DDR scratch area outside its RAM region.
 A210 loads at 0x308f8000 with a 63 KiB budget and a 256-byte SMT area at
-0x30907c00. The linked entry point is the raw image entry.
+0x30907c00. A second 256-byte area at 0x30907d00 carries P2A notifications.
+The linked entry point is the raw image entry.
 
 Startup initializes SMT ownership before enabling reception. It must
 not overwrite a channel still owned by a running vendor AON service.
@@ -78,7 +79,13 @@ shared by TH1520 and A210. Both reference SDKs select the same mailbox
 driver, under ``csi/drivers/mbox/wj/v5.0``. RX/TX apertures and the receive status
 bit belong to each SoC device tree. A210 uses the TH1520 register
 interface as its compatible fallback. Mailbox channel 0 denotes the AP
-doorbell, with no inline message data.
+doorbell, with no inline message data. On A210, completions (channel 0)
+and notifications (channel 1) share the AP doorbell; firmware sets INFO0
+or INFO1 in the tx block first and the AP clears it. Notifications are
+sent only after the AP has released the P2A channel. An AP restarted
+without resetting E902, such as through kexec, may leave that channel
+occupied. When the agent enables notifications again, firmware rings the
+doorbell for the pending message and then reports any active limits.
 The client uses a single outstanding synchronous request and must not
 reuse a timed-out channel until firmware or the peer recovers it.
 
@@ -146,8 +153,11 @@ CPU performance
 Performance domain 0 controls C910 on TH1520 or C908 on A210. A210 domain
 1 controls C920. Levels are frequencies in kHz. Reported power costs are
 abstract frequency-based values, not measured power in milliwatts.
-The fixed OPP tables define the supported limits; notifications, fast
-channels and writable limits are not implemented.
+PERFORMANCE_LIMITS_SET narrows each domain's limits to the supported
+levels they enclose and moves the current level inside them. When a P2A
+channel is available, domains also advertise PERFORMANCE_LIMITS_CHANGED
+notifications; Linux applies the reported maximum as a frequency
+constraint. Level notifications and fast channels are not implemented.
 
 A210 supports 500, 1200, 1500, 1698 and 1896 MHz on C908, and 500, 1698
 and 1896 MHz on C920. Higher C920 points need binned parts and are not
