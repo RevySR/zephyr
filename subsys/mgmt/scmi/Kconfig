@@ -10,5 +10,9 @@ menuconfig SCMI_SERVER
 
 if SCMI_SERVER
 
+config SCMI_SERVER_VOLTAGE
+	bool "Voltage Domain protocol"
+	default y
+
 endif # SCMI_SERVER
 
