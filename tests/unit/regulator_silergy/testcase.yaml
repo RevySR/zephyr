@@ -1,0 +1,4 @@
+tests:
+  libraries.regulator_silergy:
+    type: unit
+    tags: [regulator_silergy]
