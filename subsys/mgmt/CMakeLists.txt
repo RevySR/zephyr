@@ -5,3 +5,5 @@ add_subdirectory_ifdef(CONFIG_MCUMGR               mcumgr)
 add_subdirectory_ifdef(CONFIG_HAWKBIT              hawkbit)
 add_subdirectory_ifdef(CONFIG_UPDATEHUB            updatehub)
 add_subdirectory_ifdef(CONFIG_OSDP                 osdp)
+
+add_subdirectory_ifdef(CONFIG_SCMI scmi)

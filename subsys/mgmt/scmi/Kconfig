@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+config SCMI
+	bool
+
+menuconfig SCMI_SERVER
+	bool "SCMI platform server"
+	select SCMI
+	help
+	  Serve Base and optional Clock, Reset, Voltage and Performance requests.
+
+if SCMI_SERVER
+
+endif # SCMI_SERVER
+
