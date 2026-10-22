@@ -1,0 +1,408 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+#include <zephyr/dt-bindings/clock/zhihe-a210.h>
+#include <zephyr/dt-bindings/reset/zhihe-a210.h>
+
+&pvt {
+	status = "okay";
+};
+
+&a210_system {
+	pmic = <&sy70209>;
+	status = "okay";
+};
+
+&ap_clocks {
+	zhihe,boot-rates = <A210_CLK_AUDIO0_PLL_FOUTVCO 2359296000>,
+			   <A210_CLK_AUDIO1_PLL_FOUTVCO 2528870400>;
+	zhihe,boot-parents = <A210_CLK_TOP_PERI_EMMC_REF_CLK_MUX A210_CLK_AUDIO0_PLL_FOUTVCO>,
+			     <A210_CLK_VO_HDMI_PIXCLK A210_CLK_VO_CH1_PIXCLK_EN>;
+	status = "okay";
+};
+
+&ap_resets {
+	status = "okay";
+};
+
+/ {
+	zephyr,user {
+		clocks = <&ap_clocks A210_CLK_UART_SCLK(0)>,
+			 <&ap_clocks A210_CLK_UART_SCLK(1)>,
+			 <&ap_clocks A210_CLK_UART_SCLK(2)>,
+			 <&ap_clocks A210_CLK_UART_SCLK(3)>,
+			 <&ap_clocks A210_CLK_UART_SCLK(4)>,
+			 <&ap_clocks A210_CLK_UART_SCLK(5)>,
+			 <&ap_clocks A210_CLK_UART_SCLK(6)>,
+			 <&ap_clocks A210_CLK_UART_SCLK(7)>,
+			 <&ap_clocks A210_CLK_UART_SCLK(8)>,
+			 <&ap_clocks A210_CLK_UART_SCLK(9)>,
+			 <&ap_clocks A210_CLK_UART_PCLK(0)>,
+			 <&ap_clocks A210_CLK_UART_PCLK(1)>,
+			 <&ap_clocks A210_CLK_UART_PCLK(2)>,
+			 <&ap_clocks A210_CLK_UART_PCLK(3)>,
+			 <&ap_clocks A210_CLK_UART_PCLK(4)>,
+			 <&ap_clocks A210_CLK_UART_PCLK(5)>,
+			 <&ap_clocks A210_CLK_UART_PCLK(6)>,
+			 <&ap_clocks A210_CLK_UART_PCLK(7)>,
+			 <&ap_clocks A210_CLK_UART_PCLK(8)>,
+			 <&ap_clocks A210_CLK_UART_PCLK(9)>,
+			 <&ap_clocks A210_CLK_PERI1_PAD>,
+			 <&ap_clocks A210_CLK_PERI2_PAD>,
+			 <&ap_clocks A210_CLK_PERI3_PAD>,
+			 <&ap_clocks A210_CLK_AON_SYS>,
+			 <&ap_clocks A210_CLK_AON_I2C1_IC>,
+			 <&ap_clocks A210_CLK_AON_I2C1_PCLK>,
+			 <&ap_clocks A210_CLK_AUDIO0_PLL_FOUTVCO>,
+			 <&ap_clocks A210_CLK_AUDIO1_PLL_FOUTVCO>,
+			 <&ap_clocks A210_CLK_TOP_GPU_CORE_CLK_DIV>,
+			 <&ap_clocks A210_CLK_TOP_PERI_EMMC_REF_CLK_DIV>,
+			 <&ap_clocks A210_CLK_TOP_PERI_EMMC_REF_CLK_MUX>,
+			 <&ap_clocks A210_CLK_SW_PWR_WRAP_GPU_SYS_CLK_EN>,
+			 <&ap_clocks A210_CLK_SW_PWR_WRAP_DFMU_CORE_CLK_EN>,
+			 <&ap_clocks A210_CLK_SW_PWR_WRAP_GPU_CORE_CLK_EN>,
+			 <&ap_clocks A210_CLK_E16PHY_PCLK_EN>,
+			 <&ap_clocks A210_CLK_SATA_MST_AFENCE_ACLK_EN>,
+			 <&ap_clocks A210_CLK_SATA_SLV_AFENCE_ACLK_EN>,
+			 <&ap_clocks A210_CLK_SATA_GEN3X2_ACLK_EN>,
+			 <&ap_clocks A210_CLK_X2X_SATA_SLV_ACLK_EN>,
+			 <&ap_clocks A210_CLK_X2X_SATA_MST_ACLK_EN>,
+			 <&ap_clocks A210_CLK_SATA_RXOOB1_CLK_EN>,
+			 <&ap_clocks A210_CLK_SATA_RXOOB0_CLK_EN>,
+			 <&ap_clocks A210_CLK_SATA_PMALIVE_CLK_EN>,
+			 <&ap_clocks A210_CLK_PCIE_DM_GEN3X4_AUX_CLK_EN>,
+			 <&ap_clocks A210_CLK_PCIE_DM_GEN3X4_MST_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PCIE_DM_GEN3X4_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PCIE_DM_GEN3X4_SLV_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PCIE_RP_GEN3X1_AUX_CLK_EN>,
+			 <&ap_clocks A210_CLK_PCIE_RP_GEN3X1_MST_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PCIE_RP_GEN3X1_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PCIE_RP_GEN3X1_SLV_ACLK_EN>,
+			 <&ap_clocks A210_CLK_USB_SS_AXI_MST_PCLK_EN>,
+			 <&ap_clocks A210_CLK_USB_SS_AXI_MST_ACLK_EN>,
+			 <&ap_clocks A210_CLK_USB_SS_DFMU_IOMMU_PTW_ACLK_EN>,
+			 <&ap_clocks A210_CLK_USB_SS_DFMU_ACLK_EN>,
+			 <&ap_clocks A210_CLK_USB_SS_DFMU_PCLK_EN>,
+			 <&ap_clocks A210_CLK_USB31_SLV_AFENCE_ACLK_EN>,
+			 <&ap_clocks A210_CLK_USB31_REF_CLK_EN>,
+			 <&ap_clocks A210_CLK_USB31_SUSPEND_CLK_EN>,
+			 <&ap_clocks A210_CLK_USB31_BUS_CLK_EN>,
+			 <&ap_clocks A210_CLK_USB31_PCLK_EN>,
+			 <&ap_clocks A210_CLK_C10PHY_SUSPEND_CLK_EN>,
+			 <&ap_clocks A210_CLK_C10PHY_PCLK_EN>,
+			 <&ap_clocks A210_CLK_VO_X2H1_CLK_EN>,
+			 <&ap_clocks A210_CLK_VO_X2H0_CLK_EN>,
+			 <&ap_clocks A210_CLK_VO_PTW_ACLK_EN>,
+			 <&ap_clocks A210_CLK_VO_DFMU_ACLK_EN>,
+			 <&ap_clocks A210_CLK_VO_DFMU_PCLK_EN>,
+			 <&ap_clocks A210_CLK_VO_ARB_ACLK_EN>,
+			 <&ap_clocks A210_CLK_VO_ARB_PCLK_EN>,
+			 <&ap_clocks A210_CLK_VO_HDMI_SFRCLK_EN>,
+			 <&ap_clocks A210_CLK_VO_CEC_CLK_EN>,
+			 <&ap_clocks A210_CLK_VO_HDMI_PCLK_EN>,
+			 <&ap_clocks A210_CLK_VO_DPU_ACLK_EN>,
+			 <&ap_clocks A210_CLK_VO_DPUC_CLK_EN>,
+			 <&ap_clocks A210_CLK_VO_DPU_HCLK_EN>,
+			 <&ap_clocks A210_CLK_VO_CH1_PIXCLK_EN>,
+			 <&ap_clocks A210_CLK_VO_CH0_PIXCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI0_MBOX1_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI0_MBOX0_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI0_WDT0_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI0_TIMER1_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI0_TIMER1_CCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI0_TIMER0_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI0_TIMER0_CCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_SPI0_SSI_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_SPI0_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_QSPI0_SSI_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_QSPI0_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_PWM0_CCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_I2C2_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_I2C2_IC_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_I2C1_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_I2C1_IC_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_I2C0_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_I2C0_IC_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_GPIO1_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_GPIO1_DBCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_GPIO0_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_GPIO0_DBCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_GMAC1_HCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_GMAC1_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_GMAC0_HCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_GMAC0_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2S1_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2S1_SRC_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2C7_IC_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2C7_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2C6_IC_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2C6_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2C5_IC_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2C5_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2C4_IC_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2C4_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2C3_IC_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_I2C3_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_GPIO3_DBCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_GPIO3_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_SPI1_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_GPIO2_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_SPI1_SSI_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_GPIO2_DBCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_QSPI1_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_QSPI1_SSI_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_PWM2_CCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI2_PWM1_CCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_GPIO4_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_GPIO4_DBCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_ADC_PCLK_EN>,
+			 <&ap_clocks A210_CLK_AXI_PERI3_MST_PCLK_EN>,
+			 <&ap_clocks A210_CLK_AXI_PERI3_MST_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_SDIO_X2X_ACLK_S_EN>,
+			 <&ap_clocks A210_CLK_PERI3_SDIO_X2X_ACLK_M_EN>,
+			 <&ap_clocks A210_CLK_PERI3_SDIO_OSC_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_SDIO_HCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_EMMC_X2X_ACLK_S_EN>,
+			 <&ap_clocks A210_CLK_PERI3_EMMC_X2X_ACLK_M_EN>,
+			 <&ap_clocks A210_CLK_PERI3_EMMC_OSC_CLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_EMMC_HCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_EMMC_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_EMMC_SDIO_REF_CLK_CG_EN>,
+			 <&ap_clocks A210_CLK_PERI3_DMAC_HCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_DMAC_ACLK_EN>,
+			 <&ap_clocks A210_CLK_TEE_DMAC_CLKEN>,
+			 <&ap_clocks A210_CLK_USB20_BUS_CLK>,
+			 <&ap_clocks A210_CLK_PERI3_SDIO_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_X2H_GMAC1_HCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_X2H_GMAC1_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_X2H_GMAC0_HCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_X2H_GMAC0_ACLK_EN>,
+			 <&ap_clocks A210_CLK_VO_HDMI_PIXCLK>,
+			 <&ap_clocks A210_CLK_USB20_X2H_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_X2H_ACLK>,
+			 <&ap_clocks A210_CLK_USB20_SLV_AFENCE_ACLK>,
+			 <&ap_clocks A210_CLK_USB20_H2P_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_AHB_SLV_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_SYSREG_PCLK>,
+			 <&ap_clocks A210_CLK_USB20_WRAP0_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_WRAP1_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_A2X0_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_A2X0_ACLK>,
+			 <&ap_clocks A210_CLK_USB20_A2X1_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_A2X1_ACLK>;
+		resets = <&ap_resets A210_RESET_UART_SRST(0)>,
+			 <&ap_resets A210_RESET_UART_SRST(1)>,
+			 <&ap_resets A210_RESET_UART_SRST(2)>,
+			 <&ap_resets A210_RESET_UART_SRST(3)>,
+			 <&ap_resets A210_RESET_UART_SRST(4)>,
+			 <&ap_resets A210_RESET_UART_SRST(5)>,
+			 <&ap_resets A210_RESET_UART_SRST(6)>,
+			 <&ap_resets A210_RESET_UART_SRST(7)>,
+			 <&ap_resets A210_RESET_UART_SRST(8)>,
+			 <&ap_resets A210_RESET_UART_SRST(9)>,
+			 <&ap_resets A210_RESET_UART_PRST(0)>,
+			 <&ap_resets A210_RESET_UART_PRST(1)>,
+			 <&ap_resets A210_RESET_UART_PRST(2)>,
+			 <&ap_resets A210_RESET_UART_PRST(3)>,
+			 <&ap_resets A210_RESET_UART_PRST(4)>,
+			 <&ap_resets A210_RESET_UART_PRST(5)>,
+			 <&ap_resets A210_RESET_UART_PRST(6)>,
+			 <&ap_resets A210_RESET_UART_PRST(7)>,
+			 <&ap_resets A210_RESET_UART_PRST(8)>,
+			 <&ap_resets A210_RESET_UART_PRST(9)>,
+			 <&ap_resets A210_RESET_PERI1_PAD>,
+			 <&ap_resets A210_RESET_PERI2_PAD>,
+			 <&ap_resets A210_RESET_PERI3_PAD>,
+			 <&ap_resets A210_RESET_AON_I2C1>,
+			 <&ap_resets A210_RESET_GPU_PWR_WRAP_RGX_HOOD_RST>,
+			 <&ap_resets A210_RESET_PCIE_DM_GEN3X4_APBS_PRST>,
+			 <&ap_resets A210_RESET_PCIE_DM_GEN3X4_POWER_UP_RST>,
+			 <&ap_resets A210_RESET_PCIE_E16PHY_APBS_PRST>,
+			 <&ap_resets A210_RESET_PCIE_E16PHY_PHY_RST>,
+			 <&ap_resets A210_RESET_PCIE_RP_GEN3X1_APBS_PRST>,
+			 <&ap_resets A210_RESET_PCIE_RP_GEN3X1_POWER_UP_RST>,
+			 <&ap_resets A210_RESET_PCIE_SATA_ARESET>,
+			 <&ap_resets A210_RESET_PCIE_SATA_MST_AFENCE_ARST>,
+			 <&ap_resets A210_RESET_PCIE_SATA_RST_ASIC0>,
+			 <&ap_resets A210_RESET_PCIE_SATA_RST_ASIC1>,
+			 <&ap_resets A210_RESET_PCIE_SATA_RST_PMALIVE>,
+			 <&ap_resets A210_RESET_PCIE_SATA_RST_RXOOB0>,
+			 <&ap_resets A210_RESET_PCIE_SATA_RST_RXOOB1>,
+			 <&ap_resets A210_RESET_PCIE_SATA_SLV_AFENCE_ARST>,
+			 <&ap_resets A210_RESET_PCIE_X2X_SATA_MST_ARST>,
+			 <&ap_resets A210_RESET_PCIE_X2X_SATA_SLV_ARST>,
+			 <&ap_resets A210_RESET_PERI0_TIMER0_CRST>,
+			 <&ap_resets A210_RESET_PERI0_TIMER0_PRST>,
+			 <&ap_resets A210_RESET_PERI0_TIMER1_CRST>,
+			 <&ap_resets A210_RESET_PERI0_TIMER1_PRST>,
+			 <&ap_resets A210_RESET_PERI0_WDT0_PRST>,
+			 <&ap_resets A210_RESET_PERI1_GMAC0_ARST>,
+			 <&ap_resets A210_RESET_PERI1_GMAC0_HRST>,
+			 <&ap_resets A210_RESET_PERI1_GMAC0_X2H_ARST>,
+			 <&ap_resets A210_RESET_PERI1_GMAC0_X2H_HRST>,
+			 <&ap_resets A210_RESET_PERI1_GMAC1_ARST>,
+			 <&ap_resets A210_RESET_PERI1_GMAC1_HRST>,
+			 <&ap_resets A210_RESET_PERI1_GMAC1_X2H_ARST>,
+			 <&ap_resets A210_RESET_PERI1_GMAC1_X2H_HRST>,
+			 <&ap_resets A210_RESET_PERI1_GPIO0_DBRST>,
+			 <&ap_resets A210_RESET_PERI1_GPIO0_PRST>,
+			 <&ap_resets A210_RESET_PERI1_GPIO1_DBRST>,
+			 <&ap_resets A210_RESET_PERI1_GPIO1_PRST>,
+			 <&ap_resets A210_RESET_PERI1_I2C0_IC_RST>,
+			 <&ap_resets A210_RESET_PERI1_I2C0_PRST>,
+			 <&ap_resets A210_RESET_PERI1_I2C1_IC_RST>,
+			 <&ap_resets A210_RESET_PERI1_I2C1_PRST>,
+			 <&ap_resets A210_RESET_PERI1_I2C2_IC_RST>,
+			 <&ap_resets A210_RESET_PERI1_I2C2_PRST>,
+			 <&ap_resets A210_RESET_PERI1_PWM0_CRST>,
+			 <&ap_resets A210_RESET_PERI1_PWM0_PRST>,
+			 <&ap_resets A210_RESET_PERI1_QSPI0_PRST>,
+			 <&ap_resets A210_RESET_PERI1_QSPI0_SSI_RST>,
+			 <&ap_resets A210_RESET_PERI1_SPI0_PRST>,
+			 <&ap_resets A210_RESET_PERI1_SPI0_SSI_RST>,
+			 <&ap_resets A210_RESET_PERI2_GPIO2_DBRST>,
+			 <&ap_resets A210_RESET_PERI2_GPIO2_PRST>,
+			 <&ap_resets A210_RESET_PERI2_GPIO3_DBRST>,
+			 <&ap_resets A210_RESET_PERI2_GPIO3_PRST>,
+			 <&ap_resets A210_RESET_PERI2_I2C3_IC_RST>,
+			 <&ap_resets A210_RESET_PERI2_I2C3_PRST>,
+			 <&ap_resets A210_RESET_PERI2_I2C4_IC_RST>,
+			 <&ap_resets A210_RESET_PERI2_I2C4_PRST>,
+			 <&ap_resets A210_RESET_PERI2_I2C5_IC_RST>,
+			 <&ap_resets A210_RESET_PERI2_I2C5_PRST>,
+			 <&ap_resets A210_RESET_PERI2_I2C6_IC_RST>,
+			 <&ap_resets A210_RESET_PERI2_I2C6_PRST>,
+			 <&ap_resets A210_RESET_PERI2_I2C7_IC_RST>,
+			 <&ap_resets A210_RESET_PERI2_I2C7_PRST>,
+			 <&ap_resets A210_RESET_PERI2_I2S1_PRST>,
+			 <&ap_resets A210_RESET_PERI2_PWM1_CRST>,
+			 <&ap_resets A210_RESET_PERI2_PWM1_PRST>,
+			 <&ap_resets A210_RESET_PERI2_PWM2_CRST>,
+			 <&ap_resets A210_RESET_PERI2_PWM2_PRST>,
+			 <&ap_resets A210_RESET_PERI2_QSPI1_PRST>,
+			 <&ap_resets A210_RESET_PERI2_QSPI1_SSI_RST>,
+			 <&ap_resets A210_RESET_PERI2_SPI1_PRST>,
+			 <&ap_resets A210_RESET_PERI2_SPI1_SSI_RST>,
+			 <&ap_resets A210_RESET_PERI3_ADC_PRST>,
+			 <&ap_resets A210_RESET_PERI3_DMAC_ARST>,
+			 <&ap_resets A210_RESET_PERI3_DMAC_HRST>,
+			 <&ap_resets A210_RESET_PERI3_EMMC_RST>,
+			 <&ap_resets A210_RESET_PERI3_EMMC_X2X_ARST_M>,
+			 <&ap_resets A210_RESET_PERI3_EMMC_X2X_ARST_S>,
+			 <&ap_resets A210_RESET_PERI3_GPIO4_DBRST>,
+			 <&ap_resets A210_RESET_PERI3_GPIO4_PRST>,
+			 <&ap_resets A210_RESET_PERI3_SDIO_RST>,
+			 <&ap_resets A210_RESET_PERI3_SDIO_X2X_ARST_M>,
+			 <&ap_resets A210_RESET_PERI3_SDIO_X2X_ARST_S>,
+			 <&ap_resets A210_RESET_TEE_DMAC_ARST>,
+			 <&ap_resets A210_RESET_TEE_DMAC_HRST>,
+			 <&ap_resets A210_RESET_USB_AXI4_MST_ARST>,
+			 <&ap_resets A210_RESET_USB_AXI4_MST_PRST>,
+			 <&ap_resets A210_RESET_USB_C10PHY_APBS_PRST>,
+			 <&ap_resets A210_RESET_USB_C10PHY_PHY_RST>,
+			 <&ap_resets A210_RESET_USB_DFMU_ARST>,
+			 <&ap_resets A210_RESET_USB_DFMU_PRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_A2X0_ARST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_A2X0_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_A2X1_ARST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_A2X1_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_AHB_SLV_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_AXI_MST_ARST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_H2P_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_USB0_PHY_PON_RESET>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_USB1_PHY_PON_RESET>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_USB2_SYSREG_PRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_USB2_WRAP0_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_USB2_WRAP0_PRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_USB2_WRAP1_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_USB2_WRAP1_PRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_X2H_ARST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_X2H_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_SLV_AFENCE_ARST>,
+			 <&ap_resets A210_RESET_USB_USB31_APBS_PRST>,
+			 <&ap_resets A210_RESET_USB_USB31_PHY_RST>,
+			 <&ap_resets A210_RESET_USB_USB31_SLV_AFENCE_ARST>,
+			 <&ap_resets A210_RESET_USB_USB31_VCC_RST>,
+			 <&ap_resets A210_RESET_VO_ARB_ARST>,
+			 <&ap_resets A210_RESET_VO_ARB_PRST>,
+			 <&ap_resets A210_RESET_VO_DFMU_ARST>,
+			 <&ap_resets A210_RESET_VO_DFMU_PRST>,
+			 <&ap_resets A210_RESET_VO_DPU_ARST>,
+			 <&ap_resets A210_RESET_VO_DPU_CRST>,
+			 <&ap_resets A210_RESET_VO_DPU_HRST>,
+			 <&ap_resets A210_RESET_VO_HDMI_MAIN_RST>,
+			 <&ap_resets A210_RESET_VO_HDMI_PRST>,
+			 <&ap_resets A210_RESET_VO_X2H0_RST>,
+			 <&ap_resets A210_RESET_VO_X2H1_RST>;
+	};
+};
+
+&a210_pd_top {
+	status = "okay";
+};
+
+&a210_pd_gpu {
+	vin-supply = <&vdd_gpu>;
+	status = "okay";
+};
+
+&a210_pd_vo {
+	status = "okay";
+};
+
+&a210_pd_usb {
+	status = "okay";
+};
+
+&a210_pd_pcie0 {
+	status = "okay";
+};
+
+&a210_pd_pcie1 {
+	status = "okay";
+};
+
+&a210_pd_sata {
+	status = "okay";
+};
+
+&a210_pd_emmc {
+	status = "okay";
+};
+
+&a210_pd_sdio {
+	status = "okay";
+};
+
+&a210_pd_dmac {
+	status = "okay";
+};
+
+&a210_pd_pwm {
+	status = "okay";
+};
+
+&a210_pd_gmac0 {
+	status = "okay";
+};
+
+&a210_pd_gmac1 {
+	status = "okay";
+};
+
+/ {
+	zephyr,user {
+		power-domains = <&a210_pd_top>,
+				<&a210_pd_gpu>,
+				<&a210_pd_vo>,
+				<&a210_pd_usb>,
+				<&a210_pd_pcie0>,
+				<&a210_pd_pcie1>,
+				<&a210_pd_sata>,
+				<&a210_pd_emmc>,
+				<&a210_pd_sdio>,
+				<&a210_pd_dmac>,
+				<&a210_pd_pwm>,
+				<&a210_pd_gmac0>,
+				<&a210_pd_gmac1>;
+		read-only-voltage-domains = <&vdd_cpu &vddm_cpu &vdd_cpu_p &vdd_gpu>;
+	};
+};

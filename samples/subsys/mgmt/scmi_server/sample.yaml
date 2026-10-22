@@ -1,0 +1,17 @@
+sample:
+  name: SCMI platform server
+tests:
+  sample.subsys.scmi_server:
+    build_only: true
+    platform_allow:
+      - light_val_a/th1520/e902
+      - beaglev_ahead/th1520/e902
+      - milkv_meles/th1520/e902
+      - licheepi_4a/th1520/e902
+      - melonpi/a210/e902
+    tags: [scmi, regulator]
+  sample.subsys.scmi_server.base:
+    build_only: true
+    platform_allow: [beaglev_ahead/th1520/e902]
+    extra_configs: [CONFIG_SCMI_SERVER_VOLTAGE=n]
+    tags: [scmi]
