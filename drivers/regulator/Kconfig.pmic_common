@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+config REGULATOR_PMIC_COMMON
+	bool
+	depends on I2C && COUNTER
+
+config REGULATOR_PMIC_INIT_PRIORITY
+	int
+	default 80
+
+config REGULATOR_PMIC_BACKEND
+	bool
+	depends on REGULATOR_PMIC_COMMON
+
+config REGULATOR_SILERGY
+	bool
+	depends on REGULATOR_PMIC_COMMON
