@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+description: Moortec MR75203 PVT monitor
+compatible: "moortec,mr75203"
+include: base.yaml
+properties:
+  reg:
+    required: true
+  reg-names:
+    required: true
+  clock-frequency:
+    type: int
+    required: true
+  timeout-counter:
+    type: phandle
+    required: true
+  moortec,ts-coeff-h:
+    type: int
+    default: 200000
+  moortec,ts-coeff-g:
+    type: int
+    default: 60000
+  moortec,ts-coeff-j:
+    type: int
+    default: -100
+  moortec,ts-coeff-cal5:
+    type: int
+    default: 4094

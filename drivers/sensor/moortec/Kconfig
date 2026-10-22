@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+config MR75203
+	bool "Moortec MR75203 PVT monitor"
+	default y
+	depends on DT_HAS_MOORTEC_MR75203_ENABLED && COUNTER
+	help
+	  Read the temperature and voltage channels of the MR75203 PVT monitor.
+	  Serial converter transactions use a hardware counter for bounded polling.
