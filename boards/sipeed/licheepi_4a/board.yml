@@ -1,0 +1,6 @@
+board:
+  name: licheepi_4a
+  full_name: Sipeed Lichee Pi 4A
+  vendor: sipeed
+  socs:
+    - name: th1520
