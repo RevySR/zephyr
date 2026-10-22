@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+description: Read-only low word of the free-running T-Head E902 machine timer
+compatible: "thead,e902-mtime"
+include: base.yaml
+properties:
+  reg:
+    required: true
+  clock-frequency:
+    type: int
+    required: true
