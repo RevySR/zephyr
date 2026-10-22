@@ -202,3 +202,6 @@ if(CONFIG_CLOCK_CONTROL_NRF_COMMON AND NOT CONFIG_HAS_NORDIC_MULTI_OPTION_CLOCKS
 endif()
 
 zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_SHELL clock_control_shell.c)
+
+zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_XUANTIE_CPU
+  clock_control_xuantie_cpu.c cpu_dvfs.c xuantie_cpu_pll.c)
