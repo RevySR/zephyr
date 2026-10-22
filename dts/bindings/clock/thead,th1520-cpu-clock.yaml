@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+description: TH1520 C910 cluster clock and voltage controller
+compatible: "thead,th1520-cpu-clock"
+include: xuantie-cpu-clock.yaml

@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: Apache-2.0
+description: CPU PLL switching with coordinated regulator operating points
+include: [base.yaml, clock-controller.yaml]
+properties:
+  reg:
+    required: true
+  reg-names:
+    required: true
+  "#clock-cells":
+    const: 0
+  domain-name:
+    type: string
+    required: true
+  cpu-supply:
+    type: phandle
+    required: true
+    description: CPU supply, optionally a coupled regulator group
+  cpu-sram-supply:
+    type: phandle
+    description: Optional independently controlled CPU SRAM supply
+  operating-points-v2:
+    type: phandle
+    required: true
+  timeout-counter:
+    type: phandle
+    required: true
+  sustained-frequency-khz:
+    type: int
+    required: true
+    description: Highest non-turbo operating point
+  transition-latency-us:
+    type: int
+    required: true

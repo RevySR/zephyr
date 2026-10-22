@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+description: A210 C908 or C920 CPU clock and voltage controller
+compatible: "zhihe,a210-cpu-clock"
+include: xuantie-cpu-clock.yaml
