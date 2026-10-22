@@ -54,6 +54,11 @@ struct scmi_server {
 	uint16_t voltage_count;
 	const struct scmi_performance_domain *performance_domains;
 	uint16_t performance_count;
+	const struct scmi_clock *clocks;
+	uint16_t clock_count;
+	/* Optional on-demand descriptions for platforms with many resources. */
+	void *resource_context;
+	int (*clock_lookup)(void *context, uint32_t id, struct scmi_clock *clock, char name[16]);
 };
 
 /* Input and output are distinct byte buffers, including the SCMI header. */
