@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+config RESET_A210
+	bool "A210 AP reset banks"
+	default y
+	depends on DT_HAS_ZHIHE_A210_RESET_ENABLED
+	help
+	  Control the A210 AP peripheral reset banks and preserve reset requests
+	  while a managed peripheral power domain is off.
