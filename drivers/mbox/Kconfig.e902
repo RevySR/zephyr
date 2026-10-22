@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+config MBOX_E902
+	bool "E902 AON mailbox (TH1520/A210)"
+	default y
+	depends on RISCV && !MULTITHREADING
+	depends on DT_HAS_THEAD_TH1520_MBOX_ENABLED
+	help
+	  Serve the signal-only AP channel of the XuanTie AON mailbox
+	  interface shared by the TH1520 and A210 AON processors. Both instances use
+	  device-tree resources with the same register interface.

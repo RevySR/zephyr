@@ -1,0 +1,5 @@
+tests:
+  drivers.mbox.e902:
+    tags: [mbox]
+    platform_allow: [native_sim/native/64]
+    integration_platforms: [native_sim/native/64]
