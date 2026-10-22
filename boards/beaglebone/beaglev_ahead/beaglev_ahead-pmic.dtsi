@@ -1,0 +1,72 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+#include <thead/th1520-cpu-dvfs.dtsi>
+/*
+ * BeagleV-Ahead v1.0 schematic, sheets 13, 14 and 16:
+ * DA9063 merged BCORE1/2 -> DVDD08_CPU; BIO -> DVDD08_CPU_MEM;
+ * DA9121 -> DVDD08_AP. CPU memory minus core must be > -50 mV
+ * and <= 300 mV. A 20 mV BIO step limits core minus memory to 40 mV.
+ * I2C addresses and settling times follow the common TH1520 AON policy.
+ */
+/ {
+	cpu_voltage: cpu-voltage {
+		compatible = "zephyr,regulator-coupled";
+		regulator-name = "cpu";
+		regulators = <&core &mem>;
+		regulator-min-microvolt = <800000>;
+		regulator-max-microvolt = <1000000>;
+		regulator-always-on;
+		voltage-step-microvolt = <20000>;
+		min-spread-microvolt = <(-300000)>;
+		max-spread-microvolt = <40000>;
+	};
+	zephyr,user { voltage-domains = <&cpu_voltage &ap>; };
+};
+&aon_i2c {
+	status = "okay";
+	pmic@5a {
+		compatible = "dlg,da9063";
+		reg = <0x5a>;
+		timeout-counter = <&aon_timebase>;
+		upper-bank-address = <0x5b>;
+		regulators {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			core: regulator@11 {
+				compatible = "dlg,da9063-regulator";
+				reg = <17>;
+				regulator-name = "bcores";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <1000000>;
+				regulator-always-on;
+				settling-time-us = <250>;
+			};
+			mem: regulator@4 {
+				compatible = "dlg,da9063-regulator";
+				reg = <4>;
+				regulator-name = "cpu-mem";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <1000000>;
+				regulator-always-on;
+				settling-time-us = <250>;
+			};
+		};
+	};
+	pmic@68 {
+		compatible = "dlg,da9121";
+		reg = <0x68>;
+		timeout-counter = <&aon_timebase>;
+		regulators {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			ap: regulator@0 {
+				compatible = "dlg,da9121-regulator";
+				reg = <0>;
+				regulator-name = "ap";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <1000000>;
+				regulator-always-on;
+				settling-time-us = <2000>;
+			};
+		};
+	};
+};

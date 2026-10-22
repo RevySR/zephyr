@@ -1,0 +1,6 @@
+board:
+  name: beaglev_ahead
+  full_name: BeagleV Ahead
+  vendor: beaglebone
+  socs:
+    - name: th1520
