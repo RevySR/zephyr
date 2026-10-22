@@ -1,0 +1,6 @@
+board:
+  name: melonpi
+  full_name: Zhihe Melon Pi
+  vendor: zhihe
+  socs:
+    - name: a210
