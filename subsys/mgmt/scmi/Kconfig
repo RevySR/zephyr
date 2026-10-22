@@ -10,6 +10,14 @@ menuconfig SCMI_SERVER
 
 if SCMI_SERVER
 
+config SCMI_SERVER_PERFORMANCE
+	bool "Performance protocol"
+	help
+	  Provide Performance 1.0 discovery, operating point enumeration and
+	  synchronous level changes through a platform DVFS backend. Frequency
+	  readback comes from hardware; platform limits are fixed. Notifications
+	  and fast channels are not advertised.
+
 config SCMI_SERVER_VOLTAGE
 	bool "Voltage Domain protocol"
 	default y

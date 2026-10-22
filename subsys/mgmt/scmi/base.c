@@ -8,6 +8,11 @@
 #define VOLTAGE_AVAILABLE(server) false
 #endif
 
+#if defined(CONFIG_SCMI_SERVER_PERFORMANCE)
+#define PERFORMANCE_AVAILABLE(server) ((server)->performance_count != 0)
+#else
+#define PERFORMANCE_AVAILABLE(server) false
+#endif
 
 #define SCMI_BASE_VERSION 0x00020000U
 
@@ -34,6 +39,9 @@ size_t scmi_base_dispatch(const struct scmi_server *server, const uint8_t *reque
 	size_t size = 8;
 	size_t expected;
 
+	if (PERFORMANCE_AVAILABLE(server)) {
+		protocols[protocol_count++] = SCMI_PERFORMANCE_PROTOCOL;
+	}
 	if (VOLTAGE_AVAILABLE(server)) {
 		protocols[protocol_count++] = SCMI_VOLTAGE_PROTOCOL;
 	}

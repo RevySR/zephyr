@@ -52,6 +52,8 @@ struct scmi_server {
 	struct scmi_identity identity;
 	const struct scmi_voltage_domain *voltage_domains;
 	uint16_t voltage_count;
+	const struct scmi_performance_domain *performance_domains;
+	uint16_t performance_count;
 };
 
 /* Input and output are distinct byte buffers, including the SCMI header. */
