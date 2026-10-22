@@ -14,6 +14,11 @@ properties:
     required: true
     enum: [0, 1, 2, 3]
     description: Receive status bit assigned to the peer in the local IRQ block
+  zhihe,channel-info:
+    type: boolean
+    description: |
+      Provide two transmit channels sharing the peer doorbell. Each doorbell
+      first sets INFO<channel> in the tx block; the receiver clears it.
   "#mbox-cells":
     const: 1
 mbox-cells:

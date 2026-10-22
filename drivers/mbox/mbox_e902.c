@@ -11,6 +11,7 @@
 #define E902_MBOX_CLEAR        0x04
 #define E902_MBOX_MASK         0x0c
 #define E902_MBOX_GENERATE     0x10
+#define E902_MBOX_INFO(n)      (0x14 + 4 * (n))
 #define E902_MBOX_DATA_PENDING BIT(6)
 
 static void io_fence(void)
@@ -26,6 +27,7 @@ static void io_fence(void)
 struct mbox_config {
 	uintptr_t rx, tx;
 	uint32_t rx_mask;
+	bool channel_info;
 };
 struct mbox_data {
 	mbox_callback_t callback;
@@ -36,8 +38,13 @@ static int send(const struct device *dev, uint32_t channel, const struct mbox_ms
 {
 	const struct mbox_config *c = dev->config;
 
-	if (channel || msg) {
+	if (channel >= (c->channel_info ? 2 : 1) || msg) {
 		return -EINVAL;
+	}
+	/* The receiver clears INFO<channel> to identify which channel rang. */
+	if (c->channel_info) {
+		io_fence();
+		sys_write32(1, c->tx + E902_MBOX_INFO(channel));
 	}
 	/* Order device I/O as well as memory; a data-only fence is insufficient. */
 	io_fence();
@@ -86,8 +93,9 @@ static int mtu(const struct device *dev)
 }
 static uint32_t channels(const struct device *dev)
 {
-	ARG_UNUSED(dev);
-	return 1;
+	const struct mbox_config *c = dev->config;
+
+	return c->channel_info ? 2 : 1;
 }
 int mbox_e902_poll(const struct device *dev)
 {
@@ -127,6 +135,7 @@ static DEVICE_API(mbox, api) = {
 		.rx_mask = BIT(DT_INST_PROP(inst, rx_channel)),                                    \
 		.rx = DT_INST_REG_ADDR_BY_NAME(inst, rx),                                          \
 		.tx = DT_INST_REG_ADDR_BY_NAME(inst, tx),                                          \
+		.channel_info = DT_INST_PROP(inst, zhihe_channel_info),                            \
 	};                                                                                         \
 	DEVICE_DT_INST_DEFINE(inst, mbox_init, NULL, &data_##inst, &config_##inst, POST_KERNEL,    \
 			      CONFIG_MBOX_INIT_PRIORITY, &api);
