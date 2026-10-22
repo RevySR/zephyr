@@ -1,0 +1,4 @@
+tests:
+  libraries.regulator_pmic:
+    type: unit
+    tags: [regulator_pmic]

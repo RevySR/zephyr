@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+description: |
+  Regulator group with equal target voltages. Each member except the last
+  must remain within the stated voltage difference relative to the last.
+compatible: "zephyr,regulator-coupled"
+include: [base.yaml, regulator.yaml]
+properties:
+  regulators:
+    type: phandles
+    required: true
+  min-spread-microvolt:
+    type: int
+    required: true
+  max-spread-microvolt:
+    type: int
+    required: true
+  voltage-step-microvolt:
+    type: int
+    required: true
