@@ -1,0 +1,403 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+#include <thead/e902.dtsi>
+#include <zephyr/dt-bindings/clock/zhihe-a210.h>
+#include <zephyr/dt-bindings/reset/zhihe-a210.h>
+
+/ {
+	a210_system: system-controller@30842070 {
+		compatible = "zhihe,a210-system-controller";
+		reg = <0x30842070 4>, <0x30846078 4>;
+		reg-names = "enable", "request";
+		timeout-counter = <&aon_timebase>;
+		status = "disabled";
+	};
+
+	pvt: sensor@3084c000 {
+		compatible = "moortec,mr75203";
+		reg = <0x3084c000 0x80>, <0x3084c080 0x180>, <0x3084c200 0x200>, <0x3084c400 0x400>;
+		reg-names = "common", "ts", "pd", "vm";
+		clock-frequency = <110000000>;
+		timeout-counter = <&aon_timebase>;
+		moortec,ts-coeff-h = <220000>;
+		moortec,ts-coeff-cal5 = <4094>;
+		status = "disabled";
+	};
+
+	a210_pd_top: power-domain-top {
+		compatible = "zhihe,a210-power-domain";
+		domain-id = <0>;
+		domain-name = "top";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		always-on;
+		status = "disabled";
+	};
+
+	a210_pd_gpu: power-domain@6e00000 {
+		compatible = "zhihe,a210-power-domain";
+		reg = <0x6e00000 0x200>, <0x6e00600 0x200>, <0x6e00400 0x200>, <0x26d12000 0x1000>;
+		reg-names = "pcu", "pca", "bpc", "iopmp";
+		domain-id = <1>;
+		domain-name = "gpu";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		clocks = <&ap_clocks A210_CLK_TOP_GPU_CORE_CLK_DIV>,
+			 <&ap_clocks A210_CLK_SW_PWR_WRAP_GPU_SYS_CLK_EN>,
+			 <&ap_clocks A210_CLK_SW_PWR_WRAP_DFMU_CORE_CLK_EN>;
+		status = "disabled";
+	};
+
+	a210_pd_vo: power-domain@67f0000 {
+		compatible = "zhihe,a210-power-domain";
+		reg = <0x67f0000 0x200>, <0x67f1000 0x200>, <0x26712000 0x1000>;
+		reg-names = "pcu", "bpc", "iopmp";
+		domain-id = <2>;
+		domain-name = "vo";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		clocks = <&ap_clocks A210_CLK_VO_X2H0_CLK_EN>,
+			 <&ap_clocks A210_CLK_VO_X2H1_CLK_EN>,
+			 <&ap_clocks A210_CLK_VO_ARB_PCLK_EN>,
+			 <&ap_clocks A210_CLK_VO_ARB_ACLK_EN>,
+			 <&ap_clocks A210_CLK_VO_DFMU_PCLK_EN>,
+			 <&ap_clocks A210_CLK_VO_DFMU_ACLK_EN>,
+			 <&ap_clocks A210_CLK_VO_PTW_ACLK_EN>;
+		resets = <&ap_resets A210_RESET_VO_X2H0_RST>,
+			 <&ap_resets A210_RESET_VO_X2H1_RST>,
+			 <&ap_resets A210_RESET_VO_ARB_PRST>,
+			 <&ap_resets A210_RESET_VO_ARB_ARST>,
+			 <&ap_resets A210_RESET_VO_DFMU_PRST>,
+			 <&ap_resets A210_RESET_VO_DFMU_ARST>;
+		status = "disabled";
+	};
+
+	a210_pd_usb: power-domain-usb {
+		compatible = "zhihe,a210-power-domain";
+		domain-id = <3>;
+		domain-name = "usb";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		clocks = <&ap_clocks A210_CLK_USB_SS_AXI_MST_PCLK_EN>,
+			 <&ap_clocks A210_CLK_USB_SS_AXI_MST_ACLK_EN>,
+			 <&ap_clocks A210_CLK_USB_SS_DFMU_IOMMU_PTW_ACLK_EN>,
+			 <&ap_clocks A210_CLK_USB_SS_DFMU_ACLK_EN>,
+			 <&ap_clocks A210_CLK_USB_SS_DFMU_PCLK_EN>,
+			 <&ap_clocks A210_CLK_USB31_SLV_AFENCE_ACLK_EN>,
+			 <&ap_clocks A210_CLK_USB20_X2H_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_X2H_ACLK>,
+			 <&ap_clocks A210_CLK_USB20_SLV_AFENCE_ACLK>,
+			 <&ap_clocks A210_CLK_USB20_H2P_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_AHB_SLV_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_SYSREG_PCLK>,
+			 <&ap_clocks A210_CLK_USB20_A2X0_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_A2X0_ACLK>,
+			 <&ap_clocks A210_CLK_USB20_A2X1_HCLK>,
+			 <&ap_clocks A210_CLK_USB20_A2X1_ACLK>,
+			 <&ap_clocks A210_CLK_USB20_BUS_CLK>;
+		resets = <&ap_resets A210_RESET_USB_DFMU_PRST>,
+			 <&ap_resets A210_RESET_USB_DFMU_ARST>,
+			 <&ap_resets A210_RESET_USB_AXI4_MST_ARST>,
+			 <&ap_resets A210_RESET_USB_AXI4_MST_PRST>,
+			 <&ap_resets A210_RESET_USB_USB31_SLV_AFENCE_ARST>,
+			 <&ap_resets A210_RESET_USB_USB31_APBS_PRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_X2H_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_X2H_ARST>,
+			 <&ap_resets A210_RESET_USB_USB20_SLV_AFENCE_ARST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_H2P_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_AHB_SLV_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_AXI_MST_ARST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_USB2_SYSREG_PRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_USB2_WRAP0_PRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_USB2_WRAP1_PRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_A2X0_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_A2X0_ARST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_A2X1_HRST>,
+			 <&ap_resets A210_RESET_USB_USB20_BLK_A2X1_ARST>;
+		zhihe,ccu-config = <0x8004400 0x5e 0x3 0x0 0x0
+				    0x8006000 0x5e 0x3 0x0 0x0
+				    0x8006400 0x5e 0x3 0x0 0x0>;
+		status = "disabled";
+	};
+
+	a210_pd_pcie0: power-domain@a006000 {
+		compatible = "zhihe,a210-power-domain";
+		reg = <0xa006000 0x200>, <0xa006200 0x200>;
+		reg-names = "pcu", "bpc";
+		domain-id = <4>;
+		domain-name = "pcie0";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		status = "disabled";
+	};
+
+	a210_pd_pcie1: power-domain@a006400 {
+		compatible = "zhihe,a210-power-domain";
+		reg = <0xa006400 0x200>, <0xa006600 0x200>;
+		reg-names = "pcu", "bpc";
+		domain-id = <5>;
+		domain-name = "pcie1";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		status = "disabled";
+	};
+
+	a210_pd_sata: power-domain@a006800 {
+		compatible = "zhihe,a210-power-domain";
+		reg = <0xa006800 0x200>, <0xa006a00 0x200>;
+		reg-names = "pcu", "bpc";
+		domain-id = <6>;
+		domain-name = "sata";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		clocks = <&ap_clocks A210_CLK_SATA_GEN3X2_ACLK_EN>,
+			 <&ap_clocks A210_CLK_SATA_PMALIVE_CLK_EN>,
+			 <&ap_clocks A210_CLK_SATA_MST_AFENCE_ACLK_EN>,
+			 <&ap_clocks A210_CLK_SATA_SLV_AFENCE_ACLK_EN>,
+			 <&ap_clocks A210_CLK_X2X_SATA_SLV_ACLK_EN>,
+			 <&ap_clocks A210_CLK_X2X_SATA_MST_ACLK_EN>,
+			 <&ap_clocks A210_CLK_SATA_RXOOB0_CLK_EN>,
+			 <&ap_clocks A210_CLK_SATA_RXOOB1_CLK_EN>;
+		resets = <&ap_resets A210_RESET_PCIE_X2X_SATA_MST_ARST>,
+			 <&ap_resets A210_RESET_PCIE_X2X_SATA_SLV_ARST>,
+			 <&ap_resets A210_RESET_PCIE_SATA_SLV_AFENCE_ARST>,
+			 <&ap_resets A210_RESET_PCIE_SATA_MST_AFENCE_ARST>,
+			 <&ap_resets A210_RESET_PCIE_SATA_RST_ASIC0>,
+			 <&ap_resets A210_RESET_PCIE_SATA_RST_ASIC1>,
+			 <&ap_resets A210_RESET_PCIE_SATA_RST_RXOOB0>,
+			 <&ap_resets A210_RESET_PCIE_SATA_RST_RXOOB1>;
+		status = "disabled";
+	};
+
+	a210_pd_emmc: power-domain-emmc {
+		compatible = "zhihe,a210-power-domain";
+		domain-id = <7>;
+		domain-name = "emmc";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		clocks = <&ap_clocks A210_CLK_AXI_PERI3_MST_ACLK_EN>,
+			 <&ap_clocks A210_CLK_AXI_PERI3_MST_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_EMMC_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_EMMC_X2X_ACLK_S_EN>,
+			 <&ap_clocks A210_CLK_PERI3_EMMC_X2X_ACLK_M_EN>,
+			 <&ap_clocks A210_CLK_PERI3_EMMC_OSC_CLK_EN>;
+		resets = <&ap_resets A210_RESET_PERI3_EMMC_X2X_ARST_M>,
+			 <&ap_resets A210_RESET_PERI3_EMMC_X2X_ARST_S>,
+			 <&ap_resets A210_RESET_PERI3_EMMC_RST>;
+		zhihe,retain-context;
+		status = "disabled";
+	};
+
+	a210_pd_sdio: power-domain-sdio {
+		compatible = "zhihe,a210-power-domain";
+		domain-id = <8>;
+		domain-name = "sdio";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		clocks = <&ap_clocks A210_CLK_AXI_PERI3_MST_ACLK_EN>,
+			 <&ap_clocks A210_CLK_AXI_PERI3_MST_PCLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_SDIO_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PERI3_SDIO_X2X_ACLK_S_EN>,
+			 <&ap_clocks A210_CLK_PERI3_SDIO_X2X_ACLK_M_EN>,
+			 <&ap_clocks A210_CLK_PERI3_SDIO_OSC_CLK_EN>;
+		resets = <&ap_resets A210_RESET_PERI3_SDIO_X2X_ARST_M>,
+			 <&ap_resets A210_RESET_PERI3_SDIO_X2X_ARST_S>,
+			 <&ap_resets A210_RESET_PERI3_SDIO_RST>;
+		zhihe,retain-context;
+		status = "disabled";
+	};
+
+	a210_pd_dmac: power-domain-dmac {
+		compatible = "zhihe,a210-power-domain";
+		domain-id = <9>;
+		domain-name = "dmac";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		clocks = <&ap_clocks A210_CLK_AXI_PERI3_MST_ACLK_EN>,
+			 <&ap_clocks A210_CLK_AXI_PERI3_MST_PCLK_EN>;
+		status = "disabled";
+	};
+
+	a210_pd_pwm: power-domain-pwm {
+		compatible = "zhihe,a210-power-domain";
+		domain-id = <10>;
+		domain-name = "pwm";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		resets = <&ap_resets A210_RESET_PERI1_PWM0_CRST>,
+			 <&ap_resets A210_RESET_PERI1_PWM0_PRST>,
+			 <&ap_resets A210_RESET_PERI2_PWM1_CRST>,
+			 <&ap_resets A210_RESET_PERI2_PWM1_PRST>,
+			 <&ap_resets A210_RESET_PERI2_PWM2_CRST>,
+			 <&ap_resets A210_RESET_PERI2_PWM2_PRST>;
+		status = "disabled";
+	};
+
+	a210_pd_gmac0: power-domain-gmac0 {
+		compatible = "zhihe,a210-power-domain";
+		domain-id = <11>;
+		domain-name = "gmac0";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		clocks = <&ap_clocks A210_CLK_PERI1_X2H_GMAC0_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_X2H_GMAC0_HCLK_EN>;
+		resets = <&ap_resets A210_RESET_PERI1_GMAC0_X2H_ARST>,
+			 <&ap_resets A210_RESET_PERI1_GMAC0_X2H_HRST>;
+		status = "disabled";
+	};
+
+	a210_pd_gmac1: power-domain-gmac1 {
+		compatible = "zhihe,a210-power-domain";
+		domain-id = <12>;
+		domain-name = "gmac1";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		clocks = <&ap_clocks A210_CLK_PERI1_X2H_GMAC1_ACLK_EN>,
+			 <&ap_clocks A210_CLK_PERI1_X2H_GMAC1_HCLK_EN>;
+		resets = <&ap_resets A210_RESET_PERI1_GMAC1_X2H_ARST>,
+			 <&ap_resets A210_RESET_PERI1_GMAC1_X2H_HRST>;
+		status = "disabled";
+	};
+
+	ap_clocks: clock-controller@260000 {
+		compatible = "zhihe,a210-clock-tree";
+		reg = <0x00260000 0x1000>,
+		      <0x00250000 0x1000>,
+		      <0x06d02200 0x1000>,
+		      <0x0a000000 0x1000>,
+		      <0x08000000 0x1000>,
+		      <0x06720200 0x1000>,
+		      <0x06720048 0x1000>,
+		      <0x00300200 0x1000>,
+		      <0x02010200 0x1000>,
+		      <0x08400200 0x1000>,
+		      <0x00540200 0x1000>,
+		      <0x27420200 0x1000>,
+		      <0x30844000 0x1000>;
+		clock-frequency = <24000000>;
+		rtc-frequency = <32768>;
+		aon-source-frequencies = <110000000 24000000 26000000 32768>;
+		gpu-status-reg = <0x06e00048>;
+		vo-status-reg = <0x067f0048>;
+		timeout-counter = <&aon_timebase>;
+		#clock-cells = <1>;
+		status = "disabled";
+	};
+
+	ap_resets: reset-controller@6d02000 {
+		compatible = "zhihe,a210-reset";
+		reg = <0x06d02000 0x40>,
+		      <0x0a000100 0x40>,
+		      <0x00300400 0x40>,
+		      <0x02010400 0x40>,
+		      <0x08400400 0x40>,
+		      <0x00540400 0x40>,
+		      <0x27420400 0x40>,
+		      <0x08000100 0x40>,
+		      <0x06720400 0x40>,
+		      <0x30842010 0x4>;
+		gpu-status-reg = <0x06e00048>;
+		vo-status-reg = <0x067f0048>;
+		#reset-cells = <1>;
+		status = "disabled";
+	};
+
+	aon_timebase: timer@e000bff8 {
+		compatible = "thead,e902-mtime";
+		reg = <0xe000bff8 4>;
+		clock-frequency = <24000000>;
+	};
+	aon_i2c: i2c@3084a000 {
+		compatible = "snps,designware-i2c-poll";
+		reg = <0x3084a000 0x1000>;
+		interrupt-parent = <&clic>;
+		interrupts = <34 0>;
+		timeout-counter = <&aon_timebase>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+	compatible = "zhihe,a210-aon";
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,scmi-shmem = &scmi_shmem;
+		zephyr,scmi-mailbox = &scmi_mailbox;
+	};
+	sram0: memory@308f8000 {
+		compatible = "mmio-sram";
+		reg = <0x308f8000 0xfc00>;
+	};
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+		scmi_shmem: memory@30907c00 {
+			compatible = "arm,scmi-shmem";
+			reg = <0x30907c00 0x100>;
+		};
+	};
+	scmi_mailbox: scmi@310000 {
+		compatible = "zhihe,a210-mbox", "thead,th1520-mbox";
+		reg = <0x00310000 0x1000>, <0x00320000 0x1000>;
+		reg-names = "rx", "tx";
+		rx-channel = <0>;
+		#mbox-cells = <1>;
+	};
+
+	cpu_c908: clock-controller@10141400 {
+		compatible = "zhihe,a210-cpu-clock";
+		reg = <0x10141400 0x20>,
+		      <0x10141600 4>,
+		      <0x250004 4>,
+		      <0x260040 0x20>,
+		      <0x10140a00 0x20>,
+		      <0x10140000 0x440>,
+		      <0x260140 0x20>;
+		reg-names = "pll", "mux", "backup", "gmac", "ccu", "fabric", "video";
+		#clock-cells = <0>;
+		domain-name = "c908";
+		timeout-counter = <&aon_timebase>;
+
+		status = "disabled";
+	};
+
+	cpu_c920: clock-controller@10141440 {
+		compatible = "zhihe,a210-cpu-clock";
+		reg = <0x10141440 0x20>,
+		      <0x10141604 4>,
+		      <0x250008 4>,
+		      <0x260040 0x20>,
+		      <0x10140c00 0x20>;
+		reg-names = "pll", "mux", "backup", "gmac", "ccu";
+		#clock-cells = <0>;
+		domain-name = "c920";
+		timeout-counter = <&aon_timebase>;
+
+		status = "disabled";
+	};
+};

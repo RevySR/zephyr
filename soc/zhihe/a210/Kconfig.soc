@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+config SOC_A210
+	bool
+
+config SOC
+	default "a210" if SOC_A210
