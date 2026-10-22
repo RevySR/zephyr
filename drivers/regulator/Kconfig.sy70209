@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+config REGULATOR_SY70209
+	bool "SY70209 regulator"
+	default y
+	depends on !MULTITHREADING
+	depends on DT_HAS_SILERGY_SY70209_REGULATOR_ENABLED
+	depends on I2C && COUNTER
+	select REGULATOR_PMIC_COMMON
+	select REGULATOR_SILERGY

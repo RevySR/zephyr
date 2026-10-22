@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+description: SY70300 voltage output selected by the reg output identifier
+compatible: "silergy,sy70300-regulator"
+include: [regulator.yaml, base.yaml]
+properties:
+  reg:
+    required: true
+  regulator-min-microvolt:
+    required: true
+  regulator-max-microvolt:
+    required: true
+  settling-time-us:
+    type: int
+    required: true
+  enable-gpios:
+    type: phandle-array
