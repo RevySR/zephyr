@@ -1,0 +1,5 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/dts-v1/;
+#include <thead/th1520-e902.dtsi>
+/ { model = "TH1520 LIGHT validation A E902 AON"; };
+#include "light_val_a-pmic.dtsi"
