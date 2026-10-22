@@ -1,5 +1,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #include <zephyr/mgmt/scmi/server.h>
+#if defined(CONFIG_SCMI_SERVER_SENSOR)
+#include <zephyr/mgmt/scmi/sensor.h>
+#endif
 #if defined(CONFIG_SCMI_SERVER_POWER)
 #include <zephyr/mgmt/scmi/power.h>
 #endif
@@ -32,6 +35,11 @@ size_t scmi_dispatch(const struct scmi_server *server, const uint8_t *request, s
 	} else if (protocol == SCMI_BASE_PROTOCOL) {
 		return scmi_base_dispatch(server, request, request_size, response,
 					  response_capacity);
+#if defined(CONFIG_SCMI_SERVER_SENSOR)
+	} else if (protocol == SCMI_SENSOR_PROTOCOL && server->sensor_count) {
+		return scmi_sensor_dispatch(server, request, request_size, response,
+					    response_capacity);
+#endif
 #if defined(CONFIG_SCMI_SERVER_POWER)
 	} else if (protocol == SCMI_POWER_PROTOCOL && server->power_count) {
 		return scmi_power_dispatch(server, request, request_size, response,
