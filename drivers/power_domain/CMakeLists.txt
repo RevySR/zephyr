@@ -4,6 +4,7 @@
 zephyr_library()
 
 # zephyr-keep-sorted-start
+zephyr_library_sources_ifdef(CONFIG_POWER_DOMAIN_A210 power_domain_a210.c)
 zephyr_library_sources_ifdef(CONFIG_POWER_DOMAIN_ARM_SCMI power_domain_arm_scmi.c)
 zephyr_library_sources_ifdef(CONFIG_POWER_DOMAIN_GPIO power_domain_gpio.c)
 zephyr_library_sources_ifdef(CONFIG_POWER_DOMAIN_GPIO_MONITOR power_domain_gpio_monitor.c)

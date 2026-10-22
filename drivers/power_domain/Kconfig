@@ -8,6 +8,20 @@ menuconfig POWER_DOMAIN
 
 if POWER_DOMAIN
 
+config POWER_DOMAIN_A210
+	bool "A210 peripheral power domains"
+	default y
+	depends on DT_HAS_ZHIHE_A210_POWER_DOMAIN_ENABLED
+	depends on CLOCK_CONTROL_A210 && RESET_A210 && COUNTER && REGULATOR && PM_DEVICE
+	help
+	  Sequence A210 PCU transitions with clocks, resets and supplies. Preserve
+	  clock, reset and IOPMP state across peripheral power removal.
+
+config POWER_DOMAIN_A210_INIT_PRIORITY
+	int "A210 power-domain initialization priority"
+	default 96
+	depends on POWER_DOMAIN_A210
+
 module = POWER_DOMAIN
 module-str = power_domain
 source "subsys/logging/Kconfig.template.log_config"
