@@ -1,0 +1,4 @@
+socs:
+  - name: th1520
+    cpuclusters:
+      - name: e902

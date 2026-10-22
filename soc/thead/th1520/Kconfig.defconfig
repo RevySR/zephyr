@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+if SOC_TH1520
+config NUM_IRQS
+	default 64
+config RISCV_PMP
+	default n
+config XIP
+	default n
+config RISCV_MCAUSE_EXCEPTION_MASK
+	default 0x3ff
+endif

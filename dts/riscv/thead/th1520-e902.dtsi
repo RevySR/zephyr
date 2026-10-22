@@ -1,0 +1,59 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+#include <thead/e902.dtsi>
+
+/ {
+	aon_timebase: timer@e000bff8 {
+		compatible = "thead,e902-mtime";
+		reg = <0xe000bff8 4>;
+		clock-frequency = <3000000>;
+	};
+	aon_i2c: i2c@fff4c000 {
+		compatible = "snps,designware-i2c-poll";
+		reg = <0xfff4c000 0x1000>;
+		interrupt-parent = <&clic>;
+		interrupts = <34 0>;
+		timeout-counter = <&aon_timebase>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+	compatible = "thead,th1520-aon";
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,scmi-shmem = &scmi_shmem;
+		zephyr,scmi-mailbox = &scmi_mailbox;
+	};
+	/* Preserve the vendor's 3 KiB configuration prefix and DDR scratch. */
+	sram0: memory@ffef8c00 {
+		compatible = "mmio-sram";
+		reg = <0xffef8c00 0xd000>;
+	};
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+		scmi_shmem: memory@fff05c00 {
+			compatible = "arm,scmi-shmem";
+			reg = <0xfff05c00 0x100>;
+		};
+	};
+	scmi_mailbox: scmi@ffc41000 {
+		compatible = "thead,th1520-mbox";
+		reg = <0xffc41000 0x1000>, <0xffc3d000 0x1000>;
+		reg-names = "rx", "tx";
+		rx-channel = <0>;
+		#mbox-cells = <1>;
+	};
+
+	cpu_c910: clock-controller@bf010000 {
+		compatible = "thead,th1520-cpu-clock";
+		/* E902 REE alias of the AP clock controller. */
+		reg = <0xbf010000 0x100>, <0xbf010100 4>;
+		reg-names = "pll", "mux";
+		#clock-cells = <0>;
+		domain-name = "c910";
+		timeout-counter = <&aon_timebase>;
+
+		status = "disabled";
+	};
+};
