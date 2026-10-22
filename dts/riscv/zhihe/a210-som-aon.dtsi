@@ -1,0 +1,333 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+#include <zephyr/dt-bindings/regulator/sy70209.h>
+/ {
+	zephyr,user {
+		performance-domains = <&cpu_c908 &cpu_c920>;
+		read-only-voltage-domains = <&vdd_cpu &vddm_cpu &vdd_cpu_p>;
+		/* Preserve IDs 0..6; append the fixed peripheral and DDR I/O rails. */
+		voltage-domains = <&vdd_cpu &vddm_cpu &vdd_cpu_p
+			&vdd_ddr &vdd_vp &vdd_npu &vdd_gpu
+			&avdd33_emmc &avdd33_usb2 &dvdd08_aon
+			&avdd18_aon &avdd18_emmc_usb2 &avdd18_emmc_peri
+			&avdd18_top &avdd18_pll &avdd18
+			&dvdd18_ddr_vaa &p3v3 &dvdd08_top
+			&dvdd06_ddr_vddqlp>;
+	};
+
+	c908_opps: c908-opps {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp-500000000 {
+			opp-hz = <0 500000000>;
+			opp-microvolt = <700000 800000>;
+		};
+
+		opp-1200000000 {
+			opp-hz = <0 1200000000>;
+			opp-microvolt = <700000 800000>;
+		};
+
+		opp-1500000000 {
+			opp-hz = <0 1500000000>;
+			opp-microvolt = <800000 800000>;
+		};
+
+		opp-1698000000 {
+			opp-hz = <0 1698000000>;
+			opp-microvolt = <900000 900000>;
+		};
+
+		opp-1896000000 {
+			opp-hz = <0 1896000000>;
+			opp-microvolt = <1000000 1000000>;
+		};
+	};
+
+	c920_opps: c920-opps {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp-500000000 {
+			opp-hz = <0 500000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-1698000000 {
+			opp-hz = <0 1698000000>;
+			opp-microvolt = <900000>;
+		};
+
+		opp-1896000000 {
+			opp-hz = <0 1896000000>;
+			opp-microvolt = <1000000>;
+		};
+	};
+};
+
+&aon_i2c {
+	status = "okay";
+	sy70209: pmic@6 {
+		compatible = "silergy,sy70209";
+		reg = <0x06>;
+		timeout-counter = <&aon_timebase>;
+		sy70209_gpio: gpio {
+			compatible = "silergy,sy70209-gpio";
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+		regulators {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			dvdd18_ddr_vaa: regulator@1 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_BUCK(1)>;
+				regulator-name = "dvdd18_ddr_vaa";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			p3v3: regulator@2 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_BUCK(2)>;
+				regulator-name = "p3v3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			dvdd08_top: regulator@3 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_BUCK(3)>;
+				regulator-name = "dvdd08_top";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			dvdd06_ddr_vddqlp: regulator@4 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_BUCK(4)>;
+				regulator-name = "ddr_vddqlp";
+				regulator-min-microvolt = <600000>;
+				regulator-max-microvolt = <600000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			vdd_ddr: regulator@5 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <5>;
+				regulator-name = "dvdd08_ddr";
+				regulator-min-microvolt = <750000>;
+				regulator-max-microvolt = <800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			vdd_cpu: regulator@6 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <6>;
+				regulator-name = "dvdd_cpu";
+				regulator-min-microvolt = <600000>;
+				regulator-max-microvolt = <1000000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			vddm_cpu: regulator@7 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <7>;
+				regulator-name = "dvddm_cpu";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <1000000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			vdd_vp: regulator@8 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <8>;
+				regulator-name = "dvdd_vp";
+				regulator-min-microvolt = <750000>;
+				regulator-max-microvolt = <800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+			};
+
+			avdd33_emmc: regulator@11 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_LDO(1)>;
+				regulator-name = "avdd33_emmc";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			avdd33_usb2: regulator@12 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_LDO(2)>;
+				regulator-name = "avdd33_usb2";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			dvdd08_aon: regulator@13 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_LDO(3)>;
+				regulator-name = "dvdd08_aon";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			avdd18_aon: regulator@14 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_LDO(4)>;
+				regulator-name = "avdd18_aon";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			avdd18_emmc_usb2: regulator@15 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_LDO(5)>;
+				regulator-name = "avdd18_emmcusb";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			avdd18_emmc_peri: regulator@17 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_LDO(7)>;
+				regulator-name = "avdd18_peri";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			avdd18_top: regulator@18 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_LDO(8)>;
+				regulator-name = "avdd18_top";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			avdd18_pll: regulator@19 {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_LDO(9)>;
+				regulator-name = "avdd18_pll";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+
+			avdd18: regulator@1a {
+				compatible = "silergy,sy70209-regulator";
+				reg = <SY70209_LDO(10)>;
+				regulator-name = "avdd18";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+			};
+		};
+	};
+	sy70300: pmic@67 {
+		compatible = "silergy,sy70300";
+		reg = <0x67>;
+		timeout-counter = <&aon_timebase>;
+		regulators {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			vdd_npu: regulator@1 {
+				compatible = "silergy,sy70300-regulator";
+				reg = <1>;
+				regulator-name = "dvdd_npu_vip";
+				regulator-min-microvolt = <750000>;
+				regulator-max-microvolt = <1000000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				enable-gpios = <&sy70209_gpio 2 GPIO_ACTIVE_HIGH>;
+			};
+
+			vdd_gpu: regulator@3 {
+				compatible = "silergy,sy70300-regulator";
+				reg = <3>;
+				regulator-name = "dvdd_gpu";
+				regulator-min-microvolt = <750000>;
+				regulator-max-microvolt = <800000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				enable-gpios = <&sy70209_gpio 2 GPIO_ACTIVE_HIGH>;
+			};
+			vdd_cpu_p: regulator@2 {
+				compatible = "silergy,sy70300-regulator";
+				reg = <2>;
+				regulator-name = "dvdd_cpu_p";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <1000000>;
+				regulator-ramp-delay = <100>;
+				settling-time-us = <2000>;
+				regulator-always-on;
+				/* SY70209 GPIO2 gates the whole secondary PMIC. */
+				enable-gpios = <&sy70209_gpio 2 GPIO_ACTIVE_HIGH>;
+			};
+		};
+	};
+
+};
+
+&cpu_c908 {
+	cpu-sram-supply = <&vddm_cpu>;
+	cpu-supply = <&vdd_cpu>;
+	operating-points-v2 = <&c908_opps>;
+	sustained-frequency-khz = <1896000>;
+	transition-latency-us = <10000>;
+
+	status = "okay";
+};
+
+&cpu_c920 {
+	cpu-supply = <&vdd_cpu_p>;
+	operating-points-v2 = <&c920_opps>;
+	sustained-frequency-khz = <1896000>;
+	transition-latency-us = <10000>;
+
+	status = "okay";
+};
