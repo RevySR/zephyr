@@ -1,0 +1,6 @@
+board:
+  name: milkv_meles
+  full_name: Milk-V Meles
+  vendor: milkv
+  socs:
+    - name: th1520
