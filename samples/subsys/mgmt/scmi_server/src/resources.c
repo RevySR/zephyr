@@ -88,6 +88,10 @@ static const struct scmi_reset_domain resets[] = {
 	DT_FOREACH_PROP_ELEM(USER, resets, RESET_DOMAIN)};
 #endif
 
+void scmi_resources_poll(void)
+{
+}
+
 int scmi_resources_init(struct scmi_server *server)
 {
 	ARG_UNUSED(server);

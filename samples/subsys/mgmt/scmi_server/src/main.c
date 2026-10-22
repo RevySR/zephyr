@@ -162,6 +162,7 @@ int main(void)
 	}
 	for (;;) {
 		(void)mbox_e902_poll(mailbox);
+		scmi_resources_poll();
 	}
 	return 0;
 }

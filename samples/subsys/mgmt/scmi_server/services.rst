@@ -32,7 +32,8 @@ initialization are not covered by the A210 migration.
      - Missing; mode control is not equivalent to a voltage request
    * - PM temperature and PVT readings
      - SCMI Sensor with device drivers
-     - Implemented on A210: five temperatures and sixteen voltage channels
+     - Implemented on A210: five temperatures and sixteen voltage channels;
+       125 C power-off as in the vendor firmware, no throttling
    * - Clock and coordinated DVFS/AVFS policy
      - SCMI Clock and Performance with SoC clock/voltage sequencing
      - CPU Performance implemented; A210 OPPs tested, TH1520 build/model only.

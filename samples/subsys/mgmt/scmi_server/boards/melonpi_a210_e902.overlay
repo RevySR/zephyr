@@ -404,5 +404,7 @@
 				<&a210_pd_gmac0>,
 				<&a210_pd_gmac1>;
 		read-only-voltage-domains = <&vdd_cpu &vddm_cpu &vdd_cpu_p &vdd_gpu>;
+		/* Vendor AON firmware powers off at the 125 C PVT alarm. */
+		zhihe,critical-millicelsius = <125000>;
 	};
 };
