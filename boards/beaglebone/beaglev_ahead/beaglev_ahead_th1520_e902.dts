@@ -1,0 +1,5 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/dts-v1/;
+#include <thead/th1520-e902.dtsi>
+/ { model = "BeagleV Ahead E902 AON"; };
+#include "beaglev_ahead-pmic.dtsi"
