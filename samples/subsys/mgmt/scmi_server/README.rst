@@ -129,6 +129,12 @@ millivolts. Sensor configuration controls AP access to readings; the PVT
 monitor continues sampling for firmware use. Notifications, trip points and
 programmable sampling intervals are not advertised.
 
+As in the vendor AON firmware, A210 powers the system off through the PMIC
+when two consecutive 100 ms samples of any temperature sensor reach
+``zhihe,critical-millicelsius`` (125 C on Melon Pi). There is no thermal
+throttling, and the vendor -30 C power-off is not implemented. A stalled
+PVT converter can delay SCMI responses by up to 100 ms per sample.
+
 System Power implements forceful shutdown and cold reset. It does not
 advertise warm reset, suspend or graceful notifications. This requires a
 matching AP reset client; a boot chain still using the vendor AON RPC reset
