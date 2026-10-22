@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+config COUNTER_THEAD_MTIME
+	bool "T-Head E902 machine timer"
+	default y
+	depends on DT_HAS_THEAD_E902_MTIME_ENABLED
