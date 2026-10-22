@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+description: Operating points for a frequency and its required supply voltage
+compatible: "operating-points-v2"
+include: base.yaml
+properties:
+  opp-shared:
+    type: boolean
+child-binding:
+  properties:
+    opp-hz:
+      type: array
+      required: true
+      description: Frequency in Hz, encoded as one 64-bit value
+    opp-microvolt:
+      type: array
+      required: true
+    clock-latency-ns:
+      type: int
+    turbo-mode:
+      type: boolean
