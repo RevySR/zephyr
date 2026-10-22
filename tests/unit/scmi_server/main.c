@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: Apache-2.0 */
+#include <zephyr/mgmt/scmi/performance.h>
 #include <zephyr/mgmt/scmi/server.h>
 #include <zephyr/ztest.h>
 #define assert(condition) zassert_true(condition, "assertion failed")
@@ -170,11 +171,124 @@ static void test_transport(void)
 	assert(m.words[1] == 3);
 }
 
+static void notify_agent(void *context)
+{
+	struct memory *m = context;
+
+	assert(m->words[1] == 0 && m->last_barrier > m->last_write);
+	m->notifications++;
+}
+
+static void test_notification_transport(void)
+{
+	struct memory m = {0};
+	const struct scmi_smt_io io = {&m, read_word, write_word, barrier, notify_agent};
+	const uint8_t message[8] = {0x00, 0x4f, 0, 0, 1, 0, 0, 0};
+
+	assert(!scmi_smt_free(&io));
+	assert(!scmi_smt_send(&io, message, sizeof(message))); /* Agent owns the channel. */
+	assert(m.writes == 0);
+	m.words[1] = SCMI_CHANNEL_FREE;
+	assert(scmi_smt_free(&io));
+	assert(!scmi_smt_send(&io, message, 6));
+	assert(scmi_smt_send(&io, message, sizeof(message)));
+	assert(m.words[1] == 0 && m.words[4] == 0 && m.words[5] == 8);
+	assert(m.words[6] == 0x4f00 && m.words[7] == 1 && m.notifications == 1);
+	assert(!scmi_smt_send(&io, message, sizeof(message)));
+}
+
+static uint32_t current_khz = 1500000;
+static unsigned int level_writes;
+
+static int get_level(void *context, uint32_t *khz)
+{
+	ARG_UNUSED(context);
+	*khz = current_khz;
+	return 0;
+}
+
+static int set_level(void *context, uint32_t khz)
+{
+	ARG_UNUSED(context);
+	current_khz = khz;
+	level_writes++;
+	return 0;
+}
+
+static int32_t perf(const struct scmi_server *s, uint8_t command, const uint32_t *args, size_t count,
+		    uint8_t *out)
+{
+	uint8_t request[16] = {command, 0x4c};
+
+	for (size_t i = 0; i < count; i++) {
+		scmi_put_le32(request + 4 + 4 * i, args[i]);
+	}
+	assert(scmi_performance_dispatch(s, request, 4 + 4 * count, out, 104) >= 8);
+	return (int32_t)scmi_get_le32(out + 4);
+}
+
+static void test_performance_limits(void)
+{
+	static const struct scmi_performance_level levels[] = {
+		{500000, 1, 10}, {1000000, 2, 10}, {1500000, 3, 10}};
+	struct scmi_performance_state state = {0};
+	const struct scmi_performance_domain domain = {
+		"cpu", levels, ARRAY_SIZE(levels), 1500000, 100, get_level, set_level, NULL,
+		&state};
+	struct scmi_server s = {.performance_domains = &domain, .performance_count = 1};
+	uint8_t out[104], message[20];
+
+	assert(perf(&s, 3, (uint32_t[]){0}, 1, out) == 0);
+	assert(scmi_get_le32(out + 8) == (BIT(31) | BIT(30)));
+	assert(perf(&s, 9, (uint32_t[]){0, 1}, 2, out) == -1);
+	assert(perf(&s, 2, (uint32_t[]){9}, 1, out) == -4);
+	s.notifications = true;
+	assert(perf(&s, 3, (uint32_t[]){0}, 1, out) == 0);
+	assert(scmi_get_le32(out + 8) == (BIT(31) | BIT(30) | BIT(29)));
+	assert(perf(&s, 2, (uint32_t[]){9}, 1, out) == 0);
+	assert(perf(&s, 9, (uint32_t[]){0, 2}, 2, out) == -2);
+	assert(perf(&s, 9, (uint32_t[]){0, 1}, 2, out) == 0);
+	assert(perf(&s, 5, (uint32_t[]){0, 500000, 1000000}, 3, out) == -2); /* min > max */
+	assert(perf(&s, 5, (uint32_t[]){0, 2000000, 500000}, 3, out) == -5);
+	assert(perf(&s, 5, (uint32_t[]){0, 900000, 600000}, 3, out) == -5); /* No level. */
+	assert(level_writes == 0 && !state.pending);
+	assert(perf(&s, 5, (uint32_t[]){0, 1200000, 500000}, 3, out) == 0);
+	assert(current_khz == 1000000 && level_writes == 1);
+	assert(perf(&s, 6, (uint32_t[]){0}, 1, out) == 0);
+	assert(scmi_get_le32(out + 8) == 1000000 && scmi_get_le32(out + 12) == 500000);
+	assert(perf(&s, 7, (uint32_t[]){0, 1500000}, 2, out) == -5);
+	assert(perf(&s, 7, (uint32_t[]){0, 500000}, 2, out) == 0 && current_khz == 500000);
+	assert(scmi_performance_notification(&s, message, sizeof(message)) == 20);
+	assert(scmi_get_le32(message) == 0x4f00 && scmi_get_le32(message + 4) == 1);
+	assert(scmi_get_le32(message + 8) == 0 && scmi_get_le32(message + 12) == 1000000);
+	assert(scmi_get_le32(message + 16) == 500000);
+	assert(scmi_performance_notification(&s, message, sizeof(message)) == 0);
+	assert(perf(&s, 5, (uint32_t[]){0, 1200000, 500000}, 3, out) == 0);
+	assert(!state.pending); /* Unchanged effective limits do not notify. */
+	assert(scmi_performance_take_resend(&s) && !scmi_performance_take_resend(&s));
+	/* A re-registering agent learns the current limits again. */
+	assert(perf(&s, 9, (uint32_t[]){0, 0}, 2, out) == 0);
+	assert(!scmi_performance_take_resend(&s));
+	assert(perf(&s, 9, (uint32_t[]){0, 1}, 2, out) == 0);
+	assert(state.pending && scmi_performance_take_resend(&s));
+	assert(scmi_performance_notification(&s, message, sizeof(message)) == 20);
+	assert(scmi_get_le32(message + 12) == 1000000);
+	assert(perf(&s, 9, (uint32_t[]){0, 0}, 2, out) == 0);
+	assert(perf(&s, 5, (uint32_t[]){0, 1500000, 1000000}, 3, out) == 0);
+	assert(current_khz == 1000000 && !state.pending);
+	assert(scmi_performance_notification(&s, message, sizeof(message)) == 0);
+	assert(perf(&s, 5, (uint32_t[]){0, 1500000, 500000}, 3, out) == 0);
+	assert(perf(&s, 9, (uint32_t[]){0, 1}, 2, out) == 0);
+	assert(!state.pending); /* Full range: nothing to report. */
+}
+
 ZTEST(scmi_server, test_contract)
 {
 	test_base();
 	test_transport();
-	puts("PASS: Base wire vectors, 1024 tokens, bounds and SMT publication ordering");
+	test_notification_transport();
+	test_performance_limits();
+	puts("PASS: Base wire vectors, 1024 tokens, bounds, SMT ordering and limit notifications");
 }
 
 ZTEST_SUITE(scmi_server, NULL, NULL, NULL, NULL, NULL);

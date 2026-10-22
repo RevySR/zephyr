@@ -54,3 +54,27 @@ bool scmi_smt_respond(const struct scmi_smt_io *io, const struct scmi_server *se
 	}
 	return true;
 }
+
+bool scmi_smt_free(const struct scmi_smt_io *io)
+{
+	return io->read32(io->context, CHANNEL_STATUS) & SCMI_CHANNEL_FREE;
+}
+
+bool scmi_smt_send(const struct scmi_smt_io *io, const uint8_t *message, size_t size)
+{
+	if (!scmi_smt_free(io) || size < 4 || size > SCMI_MESSAGE_MAX || (size & 3)) {
+		return false;
+	}
+	io->barrier(io->context);
+	for (size_t offset = 0; offset < size; offset += 4) {
+		io->write32(io->context, SCMI_SMT_HEADER_OFFSET + offset,
+			    scmi_get_le32(message + offset));
+	}
+	io->write32(io->context, FLAGS, 0);
+	io->write32(io->context, LENGTH, (uint32_t)size);
+	io->barrier(io->context);
+	io->write32(io->context, CHANNEL_STATUS, 0);
+	io->barrier(io->context);
+	io->notify(io->context);
+	return true;
+}
