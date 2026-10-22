@@ -1,0 +1,6 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/dts-v1/;
+#include <zhihe/a210-e902.dtsi>
+/ { model = "Zhihe Melon Pi E902 AON"; };
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zhihe/a210-som-aon.dtsi>
