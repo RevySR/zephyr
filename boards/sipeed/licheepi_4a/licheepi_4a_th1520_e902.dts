@@ -1,0 +1,5 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/dts-v1/;
+#include <thead/th1520-e902.dtsi>
+/ { model = "Sipeed Lichee Pi 4A E902 AON"; };
+#include <thead/th1520-lichee-module-4a-aon.dtsi>
