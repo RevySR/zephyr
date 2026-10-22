@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+description: SY70300 PMIC
+compatible: "silergy,sy70300"
+include: i2c-device.yaml
+properties:
+  timeout-counter:
+    type: phandle
+    required: true

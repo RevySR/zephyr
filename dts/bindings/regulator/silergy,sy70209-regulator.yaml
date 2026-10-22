@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+description: |
+  SY70209 voltage output selected by the reg output identifier. Buck outputs
+  use SY70209_BUCK(1)..SY70209_BUCK(8) and LDOs use SY70209_LDO(1)..
+  SY70209_LDO(10), excluding LDO6, from zephyr/dt-bindings/regulator/sy70209.h.
+  LDOs require equal minimum and maximum voltages for a fixed board policy.
+compatible: "silergy,sy70209-regulator"
+include: [regulator.yaml, base.yaml]
+properties:
+  reg:
+    required: true
+  regulator-min-microvolt:
+    required: true
+  regulator-max-microvolt:
+    required: true
+  settling-time-us:
+    type: int
+    required: true

@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+description: SY70209 GPIO outputs, used to describe shared PMIC enable wiring
+compatible: "silergy,sy70209-gpio"
+include: [base.yaml, gpio-controller.yaml]
+properties:
+  "#gpio-cells":
+    const: 2
+gpio-cells:
+  - pin
+  - flags
