@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+description: DA9121 voltage output selected by the reg output identifier
+compatible: "dlg,da9121-regulator"
+include: [regulator.yaml, base.yaml]
+properties:
+  reg:
+    required: true
+  regulator-min-microvolt:
+    required: true
+  regulator-max-microvolt:
+    required: true
+  settling-time-us:
+    type: int
+    required: true

@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+description: DA9121 PMIC
+compatible: "dlg,da9121"
+include: i2c-device.yaml
+properties:
+  timeout-counter:
+    type: phandle
+    required: true
