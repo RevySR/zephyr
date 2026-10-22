@@ -10,6 +10,12 @@ menuconfig SCMI_SERVER
 
 if SCMI_SERVER
 
+config SCMI_SERVER_SENSOR
+	bool "Sensor protocol"
+	help
+	  Serve Sensor 2.0 scalar descriptions and synchronous readings. Sampling
+	  is managed by sensor drivers; trip notifications are not advertised.
+
 config SCMI_SERVER_POWER
 	bool "Power Domain protocol"
 	help
