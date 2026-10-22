@@ -60,3 +60,8 @@ config SCMI_SERVER_REGULATOR
 
 endif # SCMI_SERVER
 
+config SCMI_PLATFORM_CLIENT
+	bool "SCMI polling AP client"
+	select SCMI
+	help
+	  Provide a bounded, single-request client for an SCMI SMT channel.
