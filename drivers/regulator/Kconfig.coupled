@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+config REGULATOR_COUPLED
+	bool "coupled driver"
+	default y
+	depends on !MULTITHREADING
+	depends on DT_HAS_ZEPHYR_REGULATOR_COUPLED_ENABLED
+
+config REGULATOR_COUPLED_INIT_PRIORITY
+	int
+	default 85
