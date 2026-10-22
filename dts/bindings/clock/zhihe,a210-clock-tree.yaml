@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: Apache-2.0
+description: A210 AP clock tree controlled by E902 firmware
+compatible: "zhihe,a210-clock-tree"
+include: [base.yaml, clock-controller.yaml]
+properties:
+  reg:
+    required: true
+  clock-frequency:
+    type: int
+    required: true
+  rtc-frequency:
+    type: int
+    required: true
+  aon-source-frequencies:
+    type: array
+    required: true
+  gpu-status-reg:
+    type: int
+    required: true
+    description: GPU PCU current-state register address
+  vo-status-reg:
+    type: int
+    required: true
+    description: VOSYS PCU current-state register address
+  timeout-counter:
+    type: phandle
+    required: true
+  zhihe,boot-parents:
+    type: array
+    description: Pairs of clock and parent IDs selected before the AP starts using SCMI
+  zhihe,boot-rates:
+    type: array
+    description: Pairs of clock IDs and rates in Hz selected before the AP starts using SCMI
+  "#clock-cells":
+    const: 1
+clock-cells:
+  - id

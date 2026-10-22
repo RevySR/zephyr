@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+tests:
+  clock.a210_tree:
+    type: unit
+    tags: clock_control

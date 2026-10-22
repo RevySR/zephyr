@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+config CLOCK_CONTROL_A210
+	bool "A210 AP clock tree"
+	default y
+	depends on DT_HAS_ZHIHE_A210_CLOCK_TREE_ENABLED && COUNTER
+	help
+	  Control the AP clock tree from E902, including shared parent references,
+	  synchronized dividers and clock state restoration after domain power loss.
+
+config CLOCK_CONTROL_A210_INIT_PRIORITY
+	int "A210 clock tree initialization priority"
+	default 90
+	depends on CLOCK_CONTROL_A210
