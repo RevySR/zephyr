@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+description: DA9063 PMIC
+compatible: "dlg,da9063"
+include: i2c-device.yaml
+properties:
+  timeout-counter:
+    type: phandle
+    required: true
+  upper-bank-address:
+    type: int
+    required: true
