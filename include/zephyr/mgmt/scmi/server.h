@@ -67,6 +67,8 @@ struct scmi_server {
 			    char name[16]);
 	uint16_t sensor_count;
 	int (*sensor_lookup)(void *context, uint32_t id, struct scmi_sensor *sensor, char name[16]);
+	void *system_context;
+	int (*system_request)(void *context, uint32_t state);
 };
 
 /* Input and output are distinct byte buffers, including the SCMI header. */
@@ -74,6 +76,8 @@ size_t scmi_dispatch(const struct scmi_server *server, const uint8_t *request, s
 		     uint8_t *response, size_t response_capacity);
 size_t scmi_base_dispatch(const struct scmi_server *server, const uint8_t *request,
 			  size_t request_size, uint8_t *response, size_t response_capacity);
+size_t scmi_system_dispatch(const struct scmi_server *server, const uint8_t *request,
+			    size_t request_size, uint8_t *response, size_t response_capacity);
 
 /* IO callbacks transfer little-endian words, as host integer values. */
 struct scmi_smt_io {

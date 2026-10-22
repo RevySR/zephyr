@@ -35,6 +35,11 @@ size_t scmi_dispatch(const struct scmi_server *server, const uint8_t *request, s
 	} else if (protocol == SCMI_BASE_PROTOCOL) {
 		return scmi_base_dispatch(server, request, request_size, response,
 					  response_capacity);
+#if defined(CONFIG_SCMI_SERVER_SYSTEM_POWER)
+	} else if (protocol == SCMI_SYSTEM_POWER_PROTOCOL && server->system_request) {
+		return scmi_system_dispatch(server, request, request_size, response,
+					    response_capacity);
+#endif
 #if defined(CONFIG_SCMI_SERVER_SENSOR)
 	} else if (protocol == SCMI_SENSOR_PROTOCOL && server->sensor_count) {
 		return scmi_sensor_dispatch(server, request, request_size, response,
