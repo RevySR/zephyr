@@ -164,6 +164,12 @@ typedef int (*regulator_get_voltage_t)(const struct device *dev,
 				       int32_t *volt_uv);
 
 /**
+ * @brief Read the hardware enable state.
+ * See regulator_get_enabled() for argument description.
+ */
+typedef int (*regulator_get_enabled_t)(const struct device *dev, bool *enabled);
+
+/**
  * @brief Obtain the number of supported current limit levels.
  * See regulator_count_current_limits() for argument description.
  */
@@ -268,6 +274,8 @@ __subsystem struct regulator_driver_api {
 	regulator_get_error_flags_t get_error_flags;
 	/** @driver_ops_optional @copybrief regulator_set_callback */
 	regulator_set_callback_t set_callback;
+	/** @driver_ops_optional @copybrief regulator_get_enabled */
+	regulator_get_enabled_t get_enabled;
 };
 
 /** @} */
@@ -580,6 +588,34 @@ int regulator_enable(const struct device *dev);
  * @retval false Regulator is disabled.
  */
 bool regulator_is_enabled(const struct device *dev);
+
+/**
+ * @brief Read the hardware enable state, propagating communication errors.
+ *
+ * Unlike regulator_is_enabled(), this optional operation reads the provider
+ * hardware rather than the software reference count. It does not acquire or
+ * release an enable reference. On failure, @p enabled is left unchanged.
+ *
+ * @param dev Regulator device.
+ * @param enabled Destination for the observed enable state.
+ * @return 0 on success, -ENOSYS if unsupported, or a negative driver error.
+ */
+static inline int regulator_get_enabled(const struct device *dev, bool *enabled)
+{
+	const struct regulator_driver_api *api = DEVICE_API_GET(regulator, dev);
+
+	bool observed;
+	int ret;
+
+	if (api->get_enabled == NULL) {
+		return -ENOSYS;
+	}
+	ret = api->get_enabled(dev, &observed);
+	if (ret == 0) {
+		*enabled = observed;
+	}
+	return ret;
+}
 
 /**
  * @brief Disable a regulator.
