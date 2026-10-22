@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+config CLOCK_CONTROL_XUANTIE_CPU
+	bool "XuanTie CPU DVFS clocks"
+	default y
+	depends on DT_HAS_ZHIHE_A210_CPU_CLOCK_ENABLED || DT_HAS_THEAD_TH1520_CPU_CLOCK_ENABLED
+	depends on REGULATOR && COUNTER && !MULTITHREADING
+
+config CPU_DVFS_INIT_PRIORITY
+	int "CPU DVFS initialization priority"
+	default 95
+	depends on CLOCK_CONTROL_XUANTIE_CPU

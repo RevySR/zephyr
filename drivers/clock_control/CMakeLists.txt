@@ -149,3 +149,6 @@ zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_WCH_RCC clock_control_wch_rcc.
 zephyr_library_sources_ifdef(CONFIG_SOC_SERIES_AGILEX clock_agilex.c)
 zephyr_library_sources_ifdef(CONFIG_SOC_SERIES_AGILEX clock_agilex_ll.c)
 # zephyr-keep-sorted-stop
+
+zephyr_library_sources_ifdef(CONFIG_CLOCK_CONTROL_XUANTIE_CPU
+  clock_control_xuantie_cpu.c cpu_dvfs.c xuantie_cpu_pll.c)

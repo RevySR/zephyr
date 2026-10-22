@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+tests:
+  clock_control.xuantie_cpu_pll:
+    type: unit
+    tags: clock_control
