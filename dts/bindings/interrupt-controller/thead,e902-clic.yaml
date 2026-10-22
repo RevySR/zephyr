@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  T-Head E902 legacy core-local interrupt controller. CLICCFG, CLICINFO
+  and MINTTHRESH are at offsets 0, 4 and 8; CLICCFG.nlbits starts at bit 1.
+
+compatible: "thead,e902-clic"
+
+include: riscv,clic.yaml
