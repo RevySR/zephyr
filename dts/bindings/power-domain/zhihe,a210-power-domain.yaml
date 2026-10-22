@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: Apache-2.0
+description: A210 peripheral power domain managed by E902
+compatible: "zhihe,a210-power-domain"
+include: [base.yaml, reset-device.yaml]
+properties:
+  reg:
+    description: Domain PCU, BPC, optional PCA and IOPMP registers
+  reg-names:
+    type: string-array
+  domain-id:
+    type: int
+    required: true
+  domain-name:
+    type: string
+    required: true
+  always-on:
+    type: boolean
+  zhihe,retain-context:
+    type: boolean
+    description: |
+      Only gate the domain clocks on power-off. The domain resets are
+      released on power-on but stay released afterwards, so controller
+      registers survive a runtime power-off.
+  timeout-counter:
+    type: phandle
+    required: true
+  zhihe,clock-controller:
+    type: phandle
+    required: true
+  zhihe,reset-controller:
+    type: phandle
+    required: true
+  vin-supply:
+    type: phandle
+  zhihe,ccu-config:
+    type: array
+    description: |
+      Per-CCU tuples of register base, delay, delay step, low-power mode
+      (0 for gating or 1 for scaling), and low-power divider value.
+  "#power-domain-cells":
+    const: 0
+power-domain-cells: []
