@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+config THEAD_E902_CLIC
+	bool "T-Head E902 CLIC"
+	default y
+	depends on DT_HAS_THEAD_E902_CLIC_ENABLED
