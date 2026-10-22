@@ -1,0 +1,4 @@
+socs:
+  - name: a210
+    cpuclusters:
+      - name: e902

@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+config SOC_A210
+	select RISCV
+	select RISCV_PRIVILEGED
+	select RISCV_HAS_CLIC
+	select INCLUDE_RESET_VECTOR
+	select GEN_IRQ_VECTOR_TABLE
+	select SOC_RESET_HOOK
