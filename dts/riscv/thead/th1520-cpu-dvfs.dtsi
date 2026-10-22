@@ -1,0 +1,101 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/ {
+	zephyr,user {
+		performance-domains = <&cpu_c910>;
+		read-only-voltage-domains = <&cpu_voltage>;
+	};
+
+	c910_opps: c910-opps {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp-300000000 {
+			opp-hz = <0 300000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-400000000 {
+			opp-hz = <0 400000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-500000000 {
+			opp-hz = <0 500000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-600000000 {
+			opp-hz = <0 600000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-702000000 {
+			opp-hz = <0 702000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-800000000 {
+			opp-hz = <0 800000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-900000000 {
+			opp-hz = <0 900000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-1000000000 {
+			opp-hz = <0 1000000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-1104000000 {
+			opp-hz = <0 1104000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-1200000000 {
+			opp-hz = <0 1200000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-1296000000 {
+			opp-hz = <0 1296000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-1404000000 {
+			opp-hz = <0 1404000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-1500000000 {
+			opp-hz = <0 1500000000>;
+			opp-microvolt = <800000>;
+		};
+
+		opp-1608000000 {
+			opp-hz = <0 1608000000>;
+			opp-microvolt = <1000000>;
+		};
+
+		opp-1704000000 {
+			opp-hz = <0 1704000000>;
+			opp-microvolt = <1000000>;
+		};
+
+		opp-1848000000 {
+			opp-hz = <0 1848000000>;
+			opp-microvolt = <1000000>;
+		};
+	};
+};
+
+&cpu_c910 {
+	cpu-supply = <&cpu_voltage>;
+	operating-points-v2 = <&c910_opps>;
+	sustained-frequency-khz = <1848000>;
+	transition-latency-us = <10000>;
+
+	status = "okay";
+};
