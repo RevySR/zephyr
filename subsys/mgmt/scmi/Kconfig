@@ -14,5 +14,10 @@ config SCMI_SERVER_VOLTAGE
 	bool "Voltage Domain protocol"
 	default y
 
+config SCMI_SERVER_REGULATOR
+	bool "Zephyr regulator provider"
+	depends on SCMI_SERVER_VOLTAGE && REGULATOR
+	default y
+
 endif # SCMI_SERVER
 
