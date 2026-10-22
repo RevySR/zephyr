@@ -10,6 +10,13 @@ menuconfig SCMI_SERVER
 
 if SCMI_SERVER
 
+config SCMI_SERVER_CLOCK
+	bool "Clock protocol"
+	help
+	  Serve Clock 2.0 discovery, rate enumeration, synchronous rate changes
+	  and enable control. Asynchronous requests and notifications are not
+	  advertised.
+
 config SCMI_SERVER_PERFORMANCE
 	bool "Performance protocol"
 	help
