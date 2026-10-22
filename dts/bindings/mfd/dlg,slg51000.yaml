@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+description: SLG51000 PMIC
+compatible: "dlg,slg51000"
+include: i2c-device.yaml
+properties:
+  timeout-counter:
+    type: phandle
+    required: true

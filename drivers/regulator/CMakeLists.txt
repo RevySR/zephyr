@@ -35,6 +35,7 @@ zephyr_library_sources_ifdef(CONFIG_REGULATOR_PF1550 regulator_pf1550.c)
 zephyr_library_sources_ifdef(CONFIG_REGULATOR_PMIC_BACKEND pmic_backend.c regulator_pmic_engine.c)
 zephyr_library_sources_ifdef(CONFIG_REGULATOR_PMIC_COMMON regulator_pmic.c)
 zephyr_library_sources_ifdef(CONFIG_REGULATOR_RPI_PICO regulator_rpi_pico.c)
+zephyr_library_sources_ifdef(CONFIG_REGULATOR_SLG51000 regulator_slg51000.c pmic_slg51000.c)
 zephyr_library_sources_ifdef(CONFIG_REGULATOR_STM32_VREFBUF regulator_stm32_vrefbuf.c)
 zephyr_library_sources_ifdef(CONFIG_REGULATOR_TPS55287 regulator_tps55287.c)
 # zephyr-keep-sorted-stop
