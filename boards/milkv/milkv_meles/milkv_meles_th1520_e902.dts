@@ -1,0 +1,5 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/dts-v1/;
+#include <thead/th1520-e902.dtsi>
+/ { model = "Milk-V Meles E902 AON"; };
+#include "milkv_meles-pmic.dtsi"
