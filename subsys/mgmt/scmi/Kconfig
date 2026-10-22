@@ -10,6 +10,12 @@ menuconfig SCMI_SERVER
 
 if SCMI_SERVER
 
+config SCMI_SERVER_SYSTEM_POWER
+	bool "System Power protocol"
+	help
+	  Serve System Power 2.0 discovery, shutdown and cold reset requests.
+	  Warm reset, suspend and graceful notifications are not advertised.
+
 config SCMI_SERVER_SENSOR
 	bool "Sensor protocol"
 	help
