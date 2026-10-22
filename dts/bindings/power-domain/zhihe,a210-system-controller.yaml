@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+description: A210 full-system shutdown and cold reset controller
+compatible: "zhihe,a210-system-controller"
+include: base.yaml
+properties:
+  reg:
+    required: true
+  reg-names:
+    required: true
+  pmic:
+    type: phandle
+    required: true
+  timeout-counter:
+    type: phandle
+    required: true

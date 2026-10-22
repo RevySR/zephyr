@@ -4,5 +4,6 @@
 #include <zephyr/device.h>
 int a210_power_get_on(const struct device *dev, bool *on);
 int a210_power_set_on(const struct device *dev, bool on);
+int a210_system_request(const struct device *dev, uint32_t state);
 int a210_power_sync_clock(const struct device *clock, unsigned int id);
 #endif

@@ -8,6 +8,13 @@ menuconfig POWER_DOMAIN
 
 if POWER_DOMAIN
 
+config A210_SYSTEM_CONTROL
+	bool "A210 system power controller"
+	default y
+	depends on DT_HAS_ZHIHE_A210_SYSTEM_CONTROLLER_ENABLED && I2C && COUNTER
+	help
+	  Request SY70209 system shutdown or the A210 global hardware reset.
+
 config POWER_DOMAIN_A210
 	bool "A210 peripheral power domains"
 	default y
