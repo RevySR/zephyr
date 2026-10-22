@@ -1,0 +1,4 @@
+tests:
+  libraries.scmi_client:
+    type: unit
+    tags: [scmi_client]
