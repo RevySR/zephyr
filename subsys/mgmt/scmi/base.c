@@ -47,6 +47,11 @@ size_t scmi_base_dispatch(const struct scmi_server *server, const uint8_t *reque
 		protocols[protocol_count++] = SCMI_CLOCK_PROTOCOL;
 	}
 #endif
+#if defined(CONFIG_SCMI_SERVER_RESET)
+	if (server->reset_count) {
+		protocols[protocol_count++] = SCMI_RESET_PROTOCOL;
+	}
+#endif
 	if (VOLTAGE_AVAILABLE(server)) {
 		protocols[protocol_count++] = SCMI_VOLTAGE_PROTOCOL;
 	}

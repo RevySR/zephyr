@@ -3,6 +3,9 @@
 #if defined(CONFIG_SCMI_SERVER_CLOCK)
 #include <zephyr/mgmt/scmi/clock.h>
 #endif
+#if defined(CONFIG_SCMI_SERVER_RESET)
+#include <zephyr/mgmt/scmi/reset.h>
+#endif
 #if defined(CONFIG_SCMI_SERVER_PERFORMANCE)
 #include <zephyr/mgmt/scmi/performance.h>
 #endif
@@ -29,6 +32,11 @@ size_t scmi_dispatch(const struct scmi_server *server, const uint8_t *request, s
 #if defined(CONFIG_SCMI_SERVER_CLOCK)
 	} else if (protocol == SCMI_CLOCK_PROTOCOL && server->clock_count) {
 		return scmi_clock_dispatch(server, request, request_size, response,
+					   response_capacity);
+#endif
+#if defined(CONFIG_SCMI_SERVER_RESET)
+	} else if (protocol == SCMI_RESET_PROTOCOL && server->reset_count) {
+		return scmi_reset_dispatch(server, request, request_size, response,
 					   response_capacity);
 #endif
 #if defined(CONFIG_SCMI_SERVER_PERFORMANCE)
