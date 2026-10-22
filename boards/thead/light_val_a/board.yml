@@ -1,0 +1,6 @@
+board:
+  name: light_val_a
+  full_name: TH1520 LIGHT validation A
+  vendor: thead
+  socs:
+    - name: th1520

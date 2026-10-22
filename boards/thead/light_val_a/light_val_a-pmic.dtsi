@@ -1,0 +1,66 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+#include <thead/th1520-cpu-dvfs.dtsi>
+
+/ {
+	cpu_voltage: cpu-voltage {
+		compatible = "zephyr,regulator-coupled";
+		regulator-name = "cpu";
+		regulators = <&core &mem>;
+		regulator-min-microvolt = <800000>;
+		regulator-max-microvolt = <1000000>;
+		regulator-always-on;
+		voltage-step-microvolt = <10000>;
+		min-spread-microvolt = <(-300000)>;
+		max-spread-microvolt = <40000>;
+	};
+	zephyr,user { voltage-domains = <&cpu_voltage &ap>; };
+};
+&aon_i2c {
+	status = "okay";
+	pmic@5a {
+		compatible = "dlg,da9063";
+		reg = <0x5a>;
+		timeout-counter = <&aon_timebase>;
+		upper-bank-address = <0x5b>;
+		regulators {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			core: regulator@0 {
+				compatible = "dlg,da9063-regulator";
+				reg = <0>;
+				regulator-name = "bcore1";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <1000000>;
+				regulator-always-on;
+				settling-time-us = <250>;
+			};
+			mem: regulator@1 {
+				compatible = "dlg,da9063-regulator";
+				reg = <1>;
+				regulator-name = "cpu-mem";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <1000000>;
+				regulator-always-on;
+				settling-time-us = <250>;
+			};
+		};
+	};
+	pmic@68 {
+		compatible = "dlg,da9121";
+		reg = <0x68>;
+		timeout-counter = <&aon_timebase>;
+		regulators {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			ap: regulator@0 {
+				compatible = "dlg,da9121-regulator";
+				reg = <0>;
+				regulator-name = "ap";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <1000000>;
+				regulator-always-on;
+				settling-time-us = <2000>;
+			};
+		};
+	};
+};
