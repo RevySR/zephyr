@@ -1,0 +1,4 @@
+tests:
+  libraries.i2c_dw_poll:
+    type: unit
+    tags: [i2c_dw_poll]

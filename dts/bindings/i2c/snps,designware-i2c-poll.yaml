@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+description: |
+  DesignWare I2C controller used in polling mode with inherited bus timing.
+  Boot firmware must establish clock, reset, pinmux and exclusive ownership.
+compatible: "snps,designware-i2c-poll"
+include: i2c-controller.yaml
+properties:
+  reg:
+    required: true
+  timeout-counter:
+    type: phandle
+    required: true
+    description: Free-running counter for bounded transfer deadlines
