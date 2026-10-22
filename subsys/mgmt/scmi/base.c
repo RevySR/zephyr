@@ -2,6 +2,11 @@
 #include <zephyr/mgmt/scmi/server.h>
 #include <string.h>
 
+#if defined(CONFIG_SCMI_SERVER_VOLTAGE)
+#define VOLTAGE_AVAILABLE(server) ((server)->voltage_count != 0)
+#else
+#define VOLTAGE_AVAILABLE(server) false
+#endif
 
 
 #define SCMI_BASE_VERSION 0x00020000U
@@ -29,6 +34,9 @@ size_t scmi_base_dispatch(const struct scmi_server *server, const uint8_t *reque
 	size_t size = 8;
 	size_t expected;
 
+	if (VOLTAGE_AVAILABLE(server)) {
+		protocols[protocol_count++] = SCMI_VOLTAGE_PROTOCOL;
+	}
 
 	if (request_size < 4 || response_capacity < 8) {
 		return 0;
