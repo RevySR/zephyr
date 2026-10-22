@@ -87,8 +87,9 @@ protocols. Autonomous watchdog and protection policies may remain
 internal firmware functions. They still belong in the parity inventory.
 
 The transport must support the completion and notification requirements
-of the added protocols. The present synchronous, single-channel loop does
-not yet provide asynchronous suspend completion or a notification channel.
+of the added protocols. A210 provides a P2A channel for Performance limit
+notifications; the synchronous loop does not yet provide asynchronous
+suspend completion.
 The current serialized PMIC implementation is also not a multithreaded
 platform service scheduler.
 

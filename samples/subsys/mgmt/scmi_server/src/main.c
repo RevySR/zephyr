@@ -12,6 +12,10 @@
 #define MAILBOX DT_CHOSEN(zephyr_scmi_mailbox)
 #define USER    DT_PATH(zephyr_user)
 BUILD_ASSERT(DT_REG_SIZE(SHMEM) == SCMI_SMT_SIZE);
+#if defined(CONFIG_SCMI_SERVER_PERFORMANCE) && DT_HAS_CHOSEN(zephyr_scmi_notification_shmem)
+#define NOTIFY_SHMEM DT_CHOSEN(zephyr_scmi_notification_shmem)
+BUILD_ASSERT(DT_REG_SIZE(NOTIFY_SHMEM) == SCMI_SMT_SIZE);
+#endif
 
 static struct scmi_server server = {
 	.identity = {.vendor = "Zephyr", .sub_vendor = CONFIG_SOC, .implementation_version = 5},
@@ -19,13 +23,11 @@ static struct scmi_server server = {
 static const struct device *const mailbox = DEVICE_DT_GET(MAILBOX);
 static uint32_t read_memory(void *ctx, size_t offset)
 {
-	ARG_UNUSED(ctx);
-	return sys_read32(DT_REG_ADDR(SHMEM) + offset);
+	return sys_read32((uintptr_t)ctx + offset);
 }
 static void write_memory(void *ctx, size_t offset, uint32_t value)
 {
-	ARG_UNUSED(ctx);
-	sys_write32(value, DT_REG_ADDR(SHMEM) + offset);
+	sys_write32(value, (uintptr_t)ctx + offset);
 }
 static void memory_barrier(void *ctx)
 {
@@ -39,11 +41,46 @@ static void notify(void *ctx)
 	(void)mbox_send(mailbox, 0, NULL);
 }
 static const struct scmi_smt_io io = {
+	.context = (void *)DT_REG_ADDR(SHMEM),
 	.read32 = read_memory,
 	.write32 = write_memory,
 	.barrier = memory_barrier,
 	.notify = notify,
 };
+#if defined(NOTIFY_SHMEM)
+static void notify_agent(void *ctx)
+{
+	ARG_UNUSED(ctx);
+	(void)mbox_send(mailbox, 1, NULL);
+}
+static const struct scmi_smt_io notification_io = {
+	.context = (void *)DT_REG_ADDR(NOTIFY_SHMEM),
+	.read32 = read_memory,
+	.write32 = write_memory,
+	.barrier = memory_barrier,
+	.notify = notify_agent,
+};
+
+/* Build a notification only when it can be sent, honoring later disables. */
+static void send_notifications(void)
+{
+	uint8_t message[20];
+	size_t size;
+
+	if (!scmi_smt_free(&notification_io)) {
+		/* Recover a message abandoned by an agent restarted with kexec. */
+		if (scmi_performance_take_resend(&server)) {
+			notify_agent(NULL);
+		}
+		return;
+	}
+	(void)scmi_performance_take_resend(&server);
+	size = scmi_performance_notification(&server, message, sizeof(message));
+	if (size) {
+		(void)scmi_smt_send(&notification_io, message, size);
+	}
+}
+#endif
 static void receive(const struct device *dev, uint32_t channel, void *ctx, struct mbox_msg *msg)
 {
 	ARG_UNUSED(dev);
@@ -96,6 +133,7 @@ static int perf_set(void *context, uint32_t khz)
 	return clock_control_set_rate(context, NULL, (void *)(uintptr_t)(khz * 1000));
 }
 
+static struct scmi_performance_state performance_states[DT_PROP_LEN(USER, performance_domains)];
 #define PERF_DOMAIN(node, prop, i)                                                                 \
 	{                                                                                          \
 		.name = DT_PROP(DT_PHANDLE_BY_IDX(node, prop, i), domain_name),                    \
@@ -107,6 +145,7 @@ static int perf_set(void *context, uint32_t khz)
 		.get_level = perf_get,                                                             \
 		.set_level = perf_set,                                                             \
 		.context = (void *)DEVICE_DT_GET(DT_PHANDLE_BY_IDX(node, prop, i)),                \
+		.state = &performance_states[i],                                                   \
 	},
 static const struct scmi_performance_domain performance_domains[] = {
 	DT_FOREACH_PROP_ELEM(USER, performance_domains, PERF_DOMAIN)};
@@ -156,6 +195,10 @@ int main(void)
 	server.performance_count = ARRAY_SIZE(performance_domains);
 #endif
 	scmi_smt_init(&io);
+#if defined(NOTIFY_SHMEM)
+	scmi_smt_init(&notification_io);
+	server.notifications = mbox_max_channels_get(mailbox) > 1;
+#endif
 	mbox_register_callback(mailbox, 0, receive, NULL);
 	if (mbox_set_enabled(mailbox, 0, true)) {
 		return -EIO;
@@ -163,6 +206,11 @@ int main(void)
 	for (;;) {
 		(void)mbox_e902_poll(mailbox);
 		scmi_resources_poll();
+#if defined(NOTIFY_SHMEM)
+		if (server.notifications) {
+			send_notifications();
+		}
+#endif
 	}
 	return 0;
 }
