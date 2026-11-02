@@ -14,4 +14,8 @@
 #define A210_PD_PWM   10
 #define A210_PD_GMAC0 11
 #define A210_PD_GMAC1 12
+
+/* IOPMP master IDs. */
+#define A210_IOPMP_GPU_MT 0x33
+#define A210_IOPMP_GPU    0x34
 #endif
