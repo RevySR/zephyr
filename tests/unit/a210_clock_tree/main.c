@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string.h>
 
-static uint32_t registers[13][1024];
+static uint32_t registers[CLOCK_BANKS][1024];
 static uint16_t users[ARRAY_SIZE(clock_descs)];
 static unsigned int writes;
 static uint32_t time_us;
@@ -108,7 +108,8 @@ ZTEST(a210_clock_tree, test_complete_rate_enumeration)
 ZTEST(a210_clock_tree, test_shared_parent_votes_and_failed_enable)
 {
 	bool enabled;
-	unsigned int uart0 = clock_map[0], uart1 = clock_map[1];
+	unsigned int uart0 = clock_map[A210_CLK_UART_SCLK(0)];
+	unsigned int uart1 = clock_map[A210_CLK_UART_SCLK(1)];
 	unsigned int shared = clock_descs[uart0].parent;
 
 	zassert_ok(a210_tree_enable(&tree, uart0));
@@ -154,9 +155,10 @@ ZTEST(a210_clock_tree, test_critical_sources_remain_referenced)
 	for (unsigned int i = 0; i < ARRAY_SIZE(clock_critical); i++) {
 		zassert_ok(a210_tree_enable(&tree, clock_critical[i]));
 	}
-	zassert_ok(a210_tree_enable(&tree, clock_map[4]));
-	zassert_ok(a210_tree_disable(&tree, clock_map[4]));
-	zassert_true(users[clock_map[4]] > 0);
+	/* The UART4 console clock is critical. */
+	zassert_ok(a210_tree_enable(&tree, clock_map[A210_CLK_UART_SCLK(4)]));
+	zassert_ok(a210_tree_disable(&tree, clock_map[A210_CLK_UART_SCLK(4)]));
+	zassert_true(users[clock_map[A210_CLK_UART_SCLK(4)]] > 0);
 }
 
 ZTEST(a210_clock_tree, test_pll_failure_is_bounded_and_preserves_configuration)

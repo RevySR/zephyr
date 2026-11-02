@@ -5,6 +5,8 @@ include: [base.yaml, clock-controller.yaml]
 properties:
   reg:
     required: true
+  reg-names:
+    required: true
   clock-frequency:
     type: int
     required: true

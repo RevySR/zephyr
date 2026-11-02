@@ -301,6 +301,8 @@
 		      <0x00540200 0x1000>,
 		      <0x27420200 0x1000>,
 		      <0x30844000 0x1000>;
+		reg-names = "pll", "top", "gpu", "pcie", "usb", "vo", "vo_hdmi", "peri0", "peri1",
+			    "peri2", "peri3", "tee", "aon";
 		clock-frequency = <24000000>;
 		rtc-frequency = <32768>;
 		aon-source-frequencies = <110000000 24000000 26000000 32768>;

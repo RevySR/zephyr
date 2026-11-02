@@ -4,17 +4,12 @@
 #include <zephyr/drivers/clock_control.h>
 #include <zephyr/drivers/clock_control/a210.h>
 #include <zephyr/drivers/counter.h>
-#if defined(CONFIG_POWER_DOMAIN_A210)
 #include <zephyr/drivers/power_domain/a210.h>
-#endif
+#include <zephyr/dt-bindings/power/zhihe-a210.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/sys_io.h>
 #include "a210_clock_tree.h"
 #include "a210_clock_data.h"
-
-#define CLOCK_BANKS 13
-#define GPU_DOMAIN  1
-#define VO_DOMAIN   2
 
 struct tree_config {
 	uintptr_t base[CLOCK_BANKS];
@@ -42,15 +37,23 @@ struct tree_data {
 
 static unsigned int bank_domain(unsigned int bank)
 {
-	return bank == 2 ? GPU_DOMAIN : (bank == 5 || bank == 6 ? VO_DOMAIN : 0);
+	switch (bank) {
+	case BANK_GPU:
+		return A210_PD_GPU;
+	case BANK_VO:
+	case BANK_VO_HDMI:
+		return A210_PD_VO;
+	default:
+		return A210_PD_TOP;
+	}
 }
 
 static bool accessible(const struct tree_config *c, unsigned int bank)
 {
 	unsigned int domain = bank_domain(bank);
-	uintptr_t status = domain == GPU_DOMAIN ? c->gpu_status : c->vo_status;
+	uintptr_t status = domain == A210_PD_GPU ? c->gpu_status : c->vo_status;
 
-	return !domain || (sys_read32(status) & 0x1f);
+	return domain == A210_PD_TOP || (sys_read32(status) & A210_PCU_STATE_MASK);
 }
 
 static int word_index(unsigned int bank, unsigned int offset)
@@ -356,20 +359,35 @@ static DEVICE_API(clock_control, api) = {
 	.get_status = get_status,
 };
 
-#define CLOCK_BASE(i, _) DT_INST_REG_ADDR_BY_IDX(0, i)
 static const uint32_t boot_rates[] = DT_INST_PROP_OR(0, zhihe_boot_rates, {0});
 static const uint32_t boot_parents[] = DT_INST_PROP_OR(0, zhihe_boot_parents, {0});
 static const struct tree_config config = {
-	.base = {LISTIFY(CLOCK_BANKS, CLOCK_BASE, (,), _)},
-		 .gpu_status = DT_INST_PROP(0, gpu_status_reg),
-		 .vo_status = DT_INST_PROP(0, vo_status_reg),
-		 .timer = DEVICE_DT_GET(DT_INST_PHANDLE(0, timeout_counter)),
-		 .oscillator = DT_INST_PROP(0, clock_frequency),
-		 .rtc = DT_INST_PROP(0, rtc_frequency),
-		 .aon_rates = DT_INST_PROP(0, aon_source_frequencies), .boot_parents = boot_parents,
-		 .boot_parent_count = DT_INST_PROP_LEN_OR(0, zhihe_boot_parents, 0),
-		 .boot_rates = boot_rates,
-		 .boot_rate_count = DT_INST_PROP_LEN_OR(0, zhihe_boot_rates, 0),
+	.base =
+		{
+			[BANK_PLL] = DT_INST_REG_ADDR_BY_NAME(0, pll),
+			[BANK_TOP] = DT_INST_REG_ADDR_BY_NAME(0, top),
+			[BANK_GPU] = DT_INST_REG_ADDR_BY_NAME(0, gpu),
+			[BANK_PCIE] = DT_INST_REG_ADDR_BY_NAME(0, pcie),
+			[BANK_USB] = DT_INST_REG_ADDR_BY_NAME(0, usb),
+			[BANK_VO] = DT_INST_REG_ADDR_BY_NAME(0, vo),
+			[BANK_VO_HDMI] = DT_INST_REG_ADDR_BY_NAME(0, vo_hdmi),
+			[BANK_PERI0] = DT_INST_REG_ADDR_BY_NAME(0, peri0),
+			[BANK_PERI1] = DT_INST_REG_ADDR_BY_NAME(0, peri1),
+			[BANK_PERI2] = DT_INST_REG_ADDR_BY_NAME(0, peri2),
+			[BANK_PERI3] = DT_INST_REG_ADDR_BY_NAME(0, peri3),
+			[BANK_TEE] = DT_INST_REG_ADDR_BY_NAME(0, tee),
+			[BANK_AON] = DT_INST_REG_ADDR_BY_NAME(0, aon),
+		},
+	.gpu_status = DT_INST_PROP(0, gpu_status_reg),
+	.vo_status = DT_INST_PROP(0, vo_status_reg),
+	.timer = DEVICE_DT_GET(DT_INST_PHANDLE(0, timeout_counter)),
+	.oscillator = DT_INST_PROP(0, clock_frequency),
+	.rtc = DT_INST_PROP(0, rtc_frequency),
+	.aon_rates = DT_INST_PROP(0, aon_source_frequencies),
+	.boot_parents = boot_parents,
+	.boot_parent_count = DT_INST_PROP_LEN_OR(0, zhihe_boot_parents, 0),
+	.boot_rates = boot_rates,
+	.boot_rate_count = DT_INST_PROP_LEN_OR(0, zhihe_boot_rates, 0),
 };
 static struct tree_data data;
 DEVICE_DT_INST_DEFINE(0, init, NULL, &data, &config, POST_KERNEL,
