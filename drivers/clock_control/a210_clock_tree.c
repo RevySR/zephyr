@@ -3,12 +3,21 @@
 #include <zephyr/sys/util.h>
 #include <errno.h>
 
-#define PROPAGATE       BIT(0)
-#define CDE_DIVISOR     BIT(1)
-#define PLL_RESET       BIT(30)
-#define PLL_BYPASS      BIT(31)
-#define PLL_INTEGER     (BIT(24) | BIT(25))
-#define PLL_CONFIG_MASK (GENMASK(26, 24) | GENMASK(22, 20) | GENMASK(19, 8) | GENMASK(5, 0))
+/* Parent chains longer than this indicate a loop in the clock table. */
+#define MAX_DEPTH 32
+
+/* PLL fields programmed from a rate profile. */
+#define PLL_CFG0_FIELDS  (A210_PLL_POSTDIV2 | A210_PLL_POSTDIV1 | A210_PLL_FBDIV | A210_PLL_REFDIV)
+#define PLL_CFG1_FIELDS  (A210_PLL_DAC_POWER_DOWN | A210_PLL_INTEGER_MODE | A210_PLL_FRAC)
+#define PLL_CFG1_RESTORE (PLL_CFG1_FIELDS | A210_PLL_RESET)
+
+#define PLL_RESET_US        3
+#define PLL_LOCK_SETTLE_US  30
+#define PLL_LOCK_TIMEOUT_US 10000
+
+/* AON system clock configuration register */
+#define AON_CLK_DIVIDER GENMASK(2, 0)
+#define AON_CLK_SOURCE  GENMASK(5, 4)
 
 static uint32_t reg(const struct a210_clock_tree *t, const struct a210_tree_clock *c,
 		    unsigned int offset)
@@ -33,16 +42,16 @@ static int parent(const struct a210_clock_tree *t, const struct a210_tree_clock 
 
 static uint32_t pll_rate(uint32_t reference, uint32_t config, uint32_t control)
 {
-	uint32_t divider = config & 0x3f;
-	uint64_t feedback = (uint64_t)((config >> 8) & 0xfff) << 24;
+	uint32_t divider = FIELD_GET(A210_PLL_REFDIV, config);
+	uint64_t feedback = (uint64_t)FIELD_GET(A210_PLL_FBDIV, config) << A210_PLL_FRAC_BITS;
 
 	if (!divider) {
 		return 0;
 	}
-	if (!(control & BIT(24))) {
-		feedback += control & 0xffffff;
+	if (!(control & A210_PLL_INTEGER_MODE)) {
+		feedback += FIELD_GET(A210_PLL_FRAC, control);
 	}
-	return ((feedback * reference / divider) >> 24);
+	return ((feedback * reference / divider) >> A210_PLL_FRAC_BITS);
 }
 
 static int get_rate(const struct a210_clock_tree *t, unsigned int id, uint32_t *rate,
@@ -52,24 +61,25 @@ static int get_rate(const struct a210_clock_tree *t, unsigned int id, uint32_t *
 	uint32_t source = 0, divisor, value;
 	int p, ret;
 
-	if (id >= t->count || depth > 32) {
+	if (id >= t->count || depth > MAX_DEPTH) {
 		return -EINVAL;
 	}
 	c = &t->clocks[id];
-	if (index >= 0 &&
-	    (c->kind == A210_POSTDIV || (!(c->flags & PROPAGATE) && c->kind != A210_PLL))) {
+	if (index >= 0 && (c->kind == A210_POSTDIV ||
+			   (!(c->flags & A210_CLOCK_PROPAGATE) && c->kind != A210_PLL))) {
 		if (index) {
 			return -ERANGE;
 		}
 		index = -1;
 	}
 	if (c->kind == A210_FIXED) {
-		*rate = id ? t->rtc : t->oscillator;
+		*rate = c->arg0 == A210_FIXED_RTC ? t->rtc : t->oscillator;
 		return index > 0 ? -ERANGE : 0;
 	}
 	if (c->kind == A210_AON) {
 		value = reg(t, c, 0);
-		*rate = t->aon_rates[(value >> 4) & 3] / ((value & 7) + 1);
+		*rate = t->aon_rates[FIELD_GET(AON_CLK_SOURCE, value)] /
+			(FIELD_GET(AON_CLK_DIVIDER, value) + 1);
 		return index > 0 ? -ERANGE : 0;
 	}
 	p = parent(t, c);
@@ -91,15 +101,16 @@ static int get_rate(const struct a210_clock_tree *t, unsigned int id, uint32_t *
 			return -ERANGE;
 		}
 		*rate = index == 0 ? t->plls[c->arg0].nominal_rate
-				   : pll_rate(source, reg(t, c, 0), reg(t, c, 4));
+				   : pll_rate(source, reg(t, c, A210_PLL_CFG0),
+					      reg(t, c, A210_PLL_CFG1));
 		break;
 	case A210_POSTDIV:
-		if (reg(t, c, 4) & PLL_BYPASS) {
+		if (reg(t, c, A210_PLL_CFG1) & A210_PLL_BYPASS) {
 			*rate = t->oscillator;
 			break;
 		}
-		value = reg(t, c, 0);
-		divisor = ((value >> 20) & 7) * ((value >> 24) & 7);
+		value = reg(t, c, A210_PLL_CFG0);
+		divisor = FIELD_GET(A210_PLL_POSTDIV1, value) * FIELD_GET(A210_PLL_POSTDIV2, value);
 		*rate = divisor ? source / divisor : 0;
 		break;
 	case A210_DIV:
@@ -111,7 +122,7 @@ static int get_rate(const struct a210_clock_tree *t, unsigned int id, uint32_t *
 		} else {
 			divisor = (reg(t, c, 0) >> c->shift) & field_mask(c);
 		}
-		divisor += !!(c->flags & CDE_DIVISOR);
+		divisor += !!(c->flags & A210_CLOCK_CDE_DIVISOR);
 		*rate = divisor ? DIV_ROUND_UP((uint64_t)source, divisor) : 0;
 		break;
 	default:
@@ -134,7 +145,7 @@ int a210_tree_describe(const struct a210_clock_tree *t, unsigned int id, unsigne
 
 int a210_tree_rate_count(const struct a210_clock_tree *t, unsigned int id)
 {
-	for (unsigned int depth = 0; depth < 32 && id < t->count; depth++) {
+	for (unsigned int depth = 0; depth < MAX_DEPTH && id < t->count; depth++) {
 		const struct a210_tree_clock *c = &t->clocks[id];
 		int p;
 
@@ -142,7 +153,7 @@ int a210_tree_rate_count(const struct a210_clock_tree *t, unsigned int id)
 			return c->arg1 - c->arg0 + 1;
 		}
 		if (c->kind == A210_PLL || c->kind == A210_POSTDIV || c->kind == A210_FIXED ||
-		    c->kind == A210_AON || !(c->flags & PROPAGATE)) {
+		    c->kind == A210_AON || !(c->flags & A210_CLOCK_PROPAGATE)) {
 			return 1;
 		}
 		p = parent(t, c);
@@ -165,11 +176,11 @@ static int wait_pll(const struct a210_clock_tree *t, const struct a210_tree_cloc
 	uint32_t start = t->time_us(t->context);
 
 	do {
-		if (reg(t, c, 0x10) & BIT(0)) {
-			t->delay_us(t->context, 30);
+		if (reg(t, c, A210_PLL_STATUS) & A210_PLL_LOCK) {
+			t->delay_us(t->context, PLL_LOCK_SETTLE_US);
 			return 0;
 		}
-	} while ((uint32_t)(t->time_us(t->context) - start) < 10000);
+	} while ((uint32_t)(t->time_us(t->context) - start) < PLL_LOCK_TIMEOUT_US);
 	return -ETIMEDOUT;
 }
 
@@ -177,44 +188,42 @@ static int set_pll(struct a210_clock_tree *t, unsigned int id)
 {
 	const struct a210_tree_clock *c = &t->clocks[id];
 	const struct a210_tree_pll *p = &t->plls[c->arg0];
-	uint32_t old0 = reg(t, c, 0), old1 = reg(t, c, 4);
+	uint32_t old0 = reg(t, c, A210_PLL_CFG0), old1 = reg(t, c, A210_PLL_CFG1);
+	uint32_t cfg1 = p->fraction ? p->fraction : A210_PLL_INTEGER;
 	int ret;
 
-	if ((old0 & PLL_CONFIG_MASK) == p->config &&
-	    (old1 & GENMASK(25, 0)) == (p->fraction ? p->fraction : PLL_INTEGER)) {
+	if ((old0 & PLL_CFG0_FIELDS) == p->config && (old1 & PLL_CFG1_FIELDS) == cfg1) {
 		return 0;
 	}
 	if (t->users[id]) {
 		return -EBUSY;
 	}
-	ret = update(t, c, 4, PLL_RESET, PLL_RESET);
+	ret = update(t, c, A210_PLL_CFG1, A210_PLL_RESET, A210_PLL_RESET);
 	if (!ret) {
-		ret = update(t, c, 0, PLL_CONFIG_MASK, p->config);
+		ret = update(t, c, A210_PLL_CFG0, PLL_CFG0_FIELDS, p->config);
 	}
 	if (!ret) {
-		ret = update(t, c, 4, GENMASK(25, 0), p->fraction ? p->fraction : PLL_INTEGER);
+		ret = update(t, c, A210_PLL_CFG1, PLL_CFG1_FIELDS, cfg1);
 	}
 	if (!ret) {
-		t->delay_us(t->context, 3);
-		ret = update(t, c, 4, PLL_RESET, 0);
+		t->delay_us(t->context, PLL_RESET_US);
+		ret = update(t, c, A210_PLL_CFG1, A210_PLL_RESET, 0);
 	}
 	if (!ret) {
 		ret = wait_pll(t, c);
 	}
 	if (ret) {
-		(void)update(t, c, 4, PLL_RESET, PLL_RESET);
-		(void)update(t, c, 0, PLL_CONFIG_MASK, old0 & PLL_CONFIG_MASK);
-		(void)update(t, c, 4, GENMASK(25, 0) | PLL_RESET,
-			     old1 & (GENMASK(25, 0) | PLL_RESET));
-		if ((reg(t, c, 0) & PLL_CONFIG_MASK) != (old0 & PLL_CONFIG_MASK) ||
-		    (reg(t, c, 4) & (GENMASK(25, 0) | PLL_RESET)) !=
-			    (old1 & (GENMASK(25, 0) | PLL_RESET)) ||
-		    (!(old1 & PLL_RESET) && wait_pll(t, c))) {
+		(void)update(t, c, A210_PLL_CFG1, A210_PLL_RESET, A210_PLL_RESET);
+		(void)update(t, c, A210_PLL_CFG0, PLL_CFG0_FIELDS, old0 & PLL_CFG0_FIELDS);
+		(void)update(t, c, A210_PLL_CFG1, PLL_CFG1_RESTORE, old1 & PLL_CFG1_RESTORE);
+		if ((reg(t, c, A210_PLL_CFG0) & PLL_CFG0_FIELDS) != (old0 & PLL_CFG0_FIELDS) ||
+		    (reg(t, c, A210_PLL_CFG1) & PLL_CFG1_RESTORE) != (old1 & PLL_CFG1_RESTORE) ||
+		    (!(old1 & A210_PLL_RESET) && wait_pll(t, c))) {
 			t->faulted = true;
 		}
 		return ret;
 	}
-	return update(t, c, 4, PLL_RESET, old1 & PLL_RESET);
+	return update(t, c, A210_PLL_CFG1, A210_PLL_RESET, old1 & A210_PLL_RESET);
 }
 
 static int set_rate(struct a210_clock_tree *t, unsigned int id, uint32_t rate, unsigned int depth)
@@ -223,7 +232,7 @@ static int set_rate(struct a210_clock_tree *t, unsigned int id, uint32_t rate, u
 	uint32_t current, source;
 	int p, ret;
 
-	if (id >= t->count || depth > 32 || !rate) {
+	if (id >= t->count || depth > MAX_DEPTH || !rate) {
 		return -EINVAL;
 	}
 	if (t->faulted) {
@@ -256,7 +265,7 @@ static int set_rate(struct a210_clock_tree *t, unsigned int id, uint32_t rate, u
 		}
 
 		for (value = c->arg0; value <= c->arg1; value++) {
-			uint32_t divisor = value + !!(c->flags & CDE_DIVISOR);
+			uint32_t divisor = value + !!(c->flags & A210_CLOCK_CDE_DIVISOR);
 
 			if (DIV_ROUND_UP((uint64_t)source, divisor) == rate) {
 				break;
@@ -265,25 +274,25 @@ static int set_rate(struct a210_clock_tree *t, unsigned int id, uint32_t rate, u
 		if (value > c->arg1) {
 			return -ERANGE;
 		}
-		if (c->sync != 255) {
+		if (c->sync != A210_CLOCK_NO_SYNC) {
 			ret = update(t, c, 0, BIT(c->sync), 0);
 			if (ret) {
 				return ret;
 			}
-			t->delay_us(t->context, 1);
+			t->delay_us(t->context, A210_CLOCK_SYNC_DELAY_US);
 		}
 		ret = update(t, c, 0, field_mask(c) << c->shift, value << c->shift);
-		if (!ret && c->sync != 255) {
-			t->delay_us(t->context, 1);
+		if (!ret && c->sync != A210_CLOCK_NO_SYNC) {
+			t->delay_us(t->context, A210_CLOCK_SYNC_DELAY_US);
 			ret = update(t, c, 0, BIT(c->sync), BIT(c->sync));
 		}
 		if (ret) {
-			if (c->sync != 255) {
+			if (c->sync != A210_CLOCK_NO_SYNC) {
 				(void)update(t, c, 0, BIT(c->sync), 0);
 			}
 			(void)update(t, c, 0, mask, old & mask);
-			if (c->sync != 255) {
-				t->delay_us(t->context, 1);
+			if (c->sync != A210_CLOCK_NO_SYNC) {
+				t->delay_us(t->context, A210_CLOCK_SYNC_DELAY_US);
 				mask |= BIT(c->sync);
 				(void)update(t, c, 0, BIT(c->sync), old & BIT(c->sync));
 			}
@@ -291,7 +300,7 @@ static int set_rate(struct a210_clock_tree *t, unsigned int id, uint32_t rate, u
 		}
 		return ret;
 	}
-	if (!(c->flags & PROPAGATE)) {
+	if (!(c->flags & A210_CLOCK_PROPAGATE)) {
 		return -EACCES;
 	}
 	if (c->kind == A210_FACTOR) {
@@ -391,16 +400,17 @@ int a210_tree_enable(struct a210_clock_tree *t, unsigned int id)
 	if (c->kind == A210_GATE) {
 		ret = update(t, c, 0, BIT(c->shift), BIT(c->shift));
 	} else if (c->kind == A210_PLL) {
-		uint32_t old = reg(t, c, 4);
+		uint32_t old = reg(t, c, A210_PLL_CFG1);
 
-		if (old & PLL_RESET) {
-			t->delay_us(t->context, 3);
-			ret = update(t, c, 4, PLL_RESET, 0);
+		if (old & A210_PLL_RESET) {
+			t->delay_us(t->context, PLL_RESET_US);
+			ret = update(t, c, A210_PLL_CFG1, A210_PLL_RESET, 0);
 			if (!ret) {
 				ret = wait_pll(t, c);
 			}
 			if (ret) {
-				(void)update(t, c, 4, PLL_RESET, old & PLL_RESET);
+				(void)update(t, c, A210_PLL_CFG1, A210_PLL_RESET,
+					     old & A210_PLL_RESET);
 			}
 		}
 	}
@@ -430,7 +440,7 @@ int a210_tree_disable(struct a210_clock_tree *t, unsigned int id)
 	if (c->kind == A210_GATE) {
 		ret = update(t, c, 0, BIT(c->shift), 0);
 	} else if (c->kind == A210_PLL) {
-		ret = update(t, c, 4, PLL_RESET, PLL_RESET);
+		ret = update(t, c, A210_PLL_CFG1, A210_PLL_RESET, A210_PLL_RESET);
 	}
 	if (ret) {
 		return ret;
@@ -445,7 +455,7 @@ int a210_tree_disable(struct a210_clock_tree *t, unsigned int id)
 		if (c->kind == A210_GATE) {
 			t->faulted |= update(t, c, 0, BIT(c->shift), BIT(c->shift)) != 0;
 		} else if (c->kind == A210_PLL) {
-			t->faulted |= update(t, c, 4, PLL_RESET, 0) != 0;
+			t->faulted |= update(t, c, A210_PLL_CFG1, A210_PLL_RESET, 0) != 0;
 		}
 		return ret;
 	}
@@ -455,7 +465,7 @@ int a210_tree_disable(struct a210_clock_tree *t, unsigned int id)
 
 int a210_tree_state(const struct a210_clock_tree *t, unsigned int id, bool *enabled)
 {
-	for (unsigned int depth = 0; depth < 32 && id < t->count; depth++) {
+	for (unsigned int depth = 0; depth < MAX_DEPTH && id < t->count; depth++) {
 		const struct a210_tree_clock *c = &t->clocks[id];
 		int p;
 
@@ -464,7 +474,7 @@ int a210_tree_state(const struct a210_clock_tree *t, unsigned int id, bool *enab
 			return 0;
 		}
 		if ((c->kind == A210_GATE && !(reg(t, c, 0) & BIT(c->shift))) ||
-		    (c->kind == A210_PLL && (reg(t, c, 4) & PLL_RESET))) {
+		    (c->kind == A210_PLL && (reg(t, c, A210_PLL_CFG1) & A210_PLL_RESET))) {
 			*enabled = false;
 			return 0;
 		}

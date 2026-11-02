@@ -110,7 +110,7 @@ static uint32_t time_us(void *context)
 	counter_get_value(c->timer, &ticks);
 	d->total_ticks += (uint32_t)(ticks - d->last_ticks);
 	d->last_ticks = ticks;
-	return d->total_ticks / (counter_get_frequency(c->timer) / 1000000);
+	return d->total_ticks / (counter_get_frequency(c->timer) / USEC_PER_SEC);
 }
 
 static void delay_us(void *context, uint32_t us)
@@ -261,7 +261,7 @@ int a210_clock_restore_domain(const struct device *dev, unsigned int domain)
 		value = (sys_read32(reg) & ~d->masks[i]) | (d->values[i] & d->masks[i]);
 		if (w->sync) {
 			sys_write32(value & ~w->sync, reg);
-			delay_us((void *)dev, 1);
+			delay_us((void *)dev, A210_CLOCK_SYNC_DELAY_US);
 		}
 		sys_write32(value, reg);
 		__asm__ volatile("fence iorw, iorw" ::: "memory");
@@ -278,7 +278,7 @@ static int init(const struct device *dev)
 	struct tree_data *d = dev->data;
 	int ret;
 
-	if (!device_is_ready(c->timer) || counter_get_frequency(c->timer) < 1000000) {
+	if (!device_is_ready(c->timer) || counter_get_frequency(c->timer) < USEC_PER_SEC) {
 		return -ENODEV;
 	}
 	d->tree = (struct a210_clock_tree){

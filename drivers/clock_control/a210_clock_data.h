@@ -2,7 +2,7 @@
 /* A210 hardware clock topology. Register provenance: native v7.3 CRG tables. */
 static const struct a210_tree_clock clock_descs[] = {
 	{A210_FIXED, 0, 0x0, 0, 0, 0, 0, 0, 255, 0},      /* osc-24m */
-	{A210_FIXED, 0, 0x0, 0, 0, 0, 0, 0, 255, 0},      /* osc-32k */
+	{A210_FIXED, 0, 0x0, 0, 1, 0, 0, 0, 255, 0},      /* osc-32k */
 	{A210_FACTOR, 0, 0x0, 0, 1, 1, 0, 0, 255, 1},     /* aon_osc_clk_logic */
 	{A210_FACTOR, 0, 0x0, 0, 1, 1, 0, 0, 255, 1},     /* top_pll_ref_clk */
 	{A210_FACTOR, 0, 0x0, 1, 1, 1, 0, 0, 255, 1},     /* aon_rtc_clk */

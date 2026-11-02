@@ -31,6 +31,11 @@ static int update(void *context, unsigned int bank, unsigned int offset, uint32_
 	return 0;
 }
 
+static uint32_t *pll_reg(const struct a210_tree_clock *c, unsigned int reg)
+{
+	return &registers[c->bank][(c->offset + reg) / 4];
+}
+
 static void delay(void *context, uint32_t us)
 {
 	ARG_UNUSED(context);
@@ -70,11 +75,11 @@ static void before(void *fixture)
 		const struct a210_tree_clock *c = &clock_descs[i];
 
 		if (c->kind == A210_PLL) {
-			registers[c->bank][c->offset / 4] = clock_plls[c->arg0].config;
-			registers[c->bank][c->offset / 4 + 1] =
-				clock_plls[c->arg0].fraction ? clock_plls[c->arg0].fraction
-							     : BIT(24) | BIT(25);
-			registers[c->bank][c->offset / 4 + 4] = 1;
+			const struct a210_tree_pll *p = &clock_plls[c->arg0];
+
+			*pll_reg(c, A210_PLL_CFG0) = p->config;
+			*pll_reg(c, A210_PLL_CFG1) = p->fraction ? p->fraction : A210_PLL_INTEGER;
+			*pll_reg(c, A210_PLL_STATUS) = A210_PLL_LOCK;
 		} else if (c->kind == A210_DIV) {
 			registers[c->bank][c->offset / 4] |= c->arg0 << c->shift;
 		}
@@ -133,7 +138,7 @@ ZTEST(a210_clock_tree, test_dividers_round_and_preserve_neighbors)
 		}
 		original = registers[c->bank][c->offset / 4];
 		mask = (BIT(c->width) - 1) << c->shift;
-		if (c->sync != 255) {
+		if (c->sync != A210_CLOCK_NO_SYNC) {
 			mask |= BIT(c->sync);
 		}
 		zassert_ok(a210_tree_describe(&tree, i, 0, &rate));
@@ -163,12 +168,13 @@ ZTEST(a210_clock_tree, test_pll_failure_is_bounded_and_preserves_configuration)
 		if (c->kind != A210_PLL) {
 			continue;
 		}
-		original = registers[c->bank][c->offset / 4] ^ BIT(8);
-		registers[c->bank][c->offset / 4] = original;
-		registers[c->bank][c->offset / 4 + 4] = 0;
+		original = *pll_reg(c, A210_PLL_CFG0) ^ FIELD_PREP(A210_PLL_FBDIV, 1);
+		*pll_reg(c, A210_PLL_CFG0) = original;
+		*pll_reg(c, A210_PLL_STATUS) = 0;
 		zassert_ok(a210_tree_describe(&tree, i, 0, &requested));
 		zassert_equal(a210_tree_set_rate(&tree, i, requested), -ETIMEDOUT);
-		zassert_equal(registers[c->bank][c->offset / 4], original);
+		zassert_equal(*pll_reg(c, A210_PLL_CFG0), original);
+		/* One lock timeout for the new setting, one for the restored setting. */
 		zassert_true(time_us >= 20000 && time_us < 20100);
 		zassert_true(tree.faulted);
 		break;
@@ -188,7 +194,7 @@ ZTEST(a210_clock_tree, test_program_divider_after_power_loss)
 			continue;
 		}
 		div = &clock_descs[gate->parent];
-		if (div->kind != A210_DIV || (div->flags & BIT(1))) {
+		if (div->kind != A210_DIV || (div->flags & A210_CLOCK_CDE_DIVISOR)) {
 			continue;
 		}
 		registers[div->bank][div->offset / 4] &= ~((BIT(div->width) - 1) << div->shift);
@@ -208,7 +214,7 @@ ZTEST(a210_clock_tree, test_inherit_running_pll_without_restarting_it)
 		const struct a210_tree_clock *c = &clock_descs[i];
 
 		if (c->kind == A210_PLL) {
-			registers[c->bank][c->offset / 4 + 4] = 0;
+			*pll_reg(c, A210_PLL_STATUS) = 0;
 			zassert_ok(a210_tree_enable(&tree, i));
 			zassert_equal(writes, 0);
 			break;
