@@ -11,6 +11,7 @@
 #include <zephyr/mgmt/scmi/power.h>
 #include <zephyr/pm/device.h>
 #include <string.h>
+#include "a210_names.h"
 #include "resources.h"
 
 #define USER DT_PATH(zephyr_user)
@@ -31,6 +32,8 @@ static uint8_t thermal_hits;
 	BUILD_ASSERT(DT_SAME_NODE(DT_RESET_CTLR_BY_IDX(node, i), DT_RESET_CTLR_BY_IDX(USER, 0)));
 DT_FOREACH_PROP_ELEM(USER, clocks, CHECK_CLOCK)
 DT_FOREACH_PROP_ELEM(USER, resets, CHECK_RESET)
+BUILD_ASSERT(ARRAY_SIZE(clock_names) == DT_PROP_LEN(USER, clocks));
+BUILD_ASSERT(ARRAY_SIZE(reset_names) == DT_PROP_LEN(USER, resets));
 
 static void numbered_name(char name[16], const char *prefix, unsigned int id)
 {
@@ -46,6 +49,38 @@ static void numbered_name(char name[16], const char *prefix, unsigned int id)
 		name[pos++] = digits[--count];
 	}
 	name[pos] = '\0';
+}
+
+/* Appends entry @index (1-based) of a NUL-separated string table. */
+static bool append_string(char name[16], size_t *pos, const char *table, unsigned int index)
+{
+	while (--index > 0) {
+		table += strlen(table) + 1;
+	}
+	for (; *table != '\0'; table++) {
+		if (*pos >= A210_NAME_SIZE - 1) {
+			return false;
+		}
+		name[(*pos)++] = *table == '_' ? '-' : *table;
+	}
+	return true;
+}
+
+static int copy_name(char name[16], struct a210_name entry)
+{
+	size_t pos = 0;
+
+	if (entry.stem == STEM_NONE || !append_string(name, &pos, name_stems, entry.stem)) {
+		return -EINVAL;
+	}
+	if (entry.suffix != SUFFIX_NONE) {
+		if (!append_string(name, &pos, "-", 1) ||
+		    !append_string(name, &pos, name_suffixes, entry.suffix)) {
+			return -EINVAL;
+		}
+	}
+	name[pos] = '\0';
+	return 0;
 }
 
 static int clock_rate(void *context, uint64_t *rate)
@@ -102,23 +137,16 @@ static const struct scmi_clock_ops clock_ops = {
 
 static int clock_lookup(void *context, uint32_t id, struct scmi_clock *clock, char name[16])
 {
-	static const char *const initial_names[] = {
-		"uart0",     "uart1",        "uart2",     "uart3",     "uart4",     "uart5",
-		"uart6",     "uart7",        "uart8",     "uart9",     "uart0-apb", "uart1-apb",
-		"uart2-apb", "uart3-apb",    "uart4-apb", "uart5-apb", "uart6-apb", "uart7-apb",
-		"uart8-apb", "uart9-apb",    "peri1-pad", "peri2-pad", "peri3-pad", "aon-sys",
-		"aon-i2c1",  "aon-i2c1-apb",
-	};
 	int count = a210_clock_rate_count(clocks, id);
+	int ret;
 
 	ARG_UNUSED(context);
 	if (count <= 0 || count > UINT16_MAX) {
 		return count < 0 ? count : -ERANGE;
 	}
-	if (id < ARRAY_SIZE(initial_names)) {
-		strcpy(name, initial_names[id]);
-	} else {
-		numbered_name(name, "a210-clk", id);
+	ret = copy_name(name, clock_names[id]);
+	if (ret < 0) {
+		return ret;
 	}
 	*clock = (struct scmi_clock){
 		.name = name,
@@ -137,8 +165,12 @@ static int reset_set(void *context, bool asserted)
 
 static int reset_lookup(void *context, uint32_t id, struct scmi_reset_domain *reset, char name[16])
 {
+	int ret = copy_name(name, reset_names[id]);
+
 	ARG_UNUSED(context);
-	numbered_name(name, id < 10 ? "uart" : "a210-rst", id);
+	if (ret < 0) {
+		return ret;
+	}
 	*reset = (struct scmi_reset_domain){
 		.name = name,
 		.context = (void *)(uintptr_t)id,
