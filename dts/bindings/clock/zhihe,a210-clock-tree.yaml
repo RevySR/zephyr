@@ -24,6 +24,10 @@ properties:
     type: int
     required: true
     description: VOSYS PCU current-state register address
+  vp-status-reg:
+    type: int
+    required: true
+    description: VP wrapper PCU current-state register address
   timeout-counter:
     type: phandle
     required: true

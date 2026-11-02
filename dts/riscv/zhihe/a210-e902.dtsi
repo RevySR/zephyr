@@ -300,14 +300,16 @@
 		      <0x08400200 0x1000>,
 		      <0x00540200 0x1000>,
 		      <0x27420200 0x1000>,
-		      <0x30844000 0x1000>;
+		      <0x30844000 0x1000>,
+		      <0x06b20200 0x1000>;
 		reg-names = "pll", "top", "gpu", "pcie", "usb", "vo", "vo_hdmi", "peri0", "peri1",
-			    "peri2", "peri3", "tee", "aon";
+			    "peri2", "peri3", "tee", "aon", "vp";
 		clock-frequency = <24000000>;
 		rtc-frequency = <32768>;
 		aon-source-frequencies = <110000000 24000000 26000000 32768>;
 		gpu-status-reg = <0x06e00048>;
 		vo-status-reg = <0x067f0048>;
+		vp-status-reg = <0x06bf8048>;
 		timeout-counter = <&aon_timebase>;
 		#clock-cells = <1>;
 		status = "disabled";

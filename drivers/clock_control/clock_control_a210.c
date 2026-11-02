@@ -15,6 +15,7 @@ struct tree_config {
 	uintptr_t base[CLOCK_BANKS];
 	uintptr_t gpu_status;
 	uintptr_t vo_status;
+	uintptr_t vp_status;
 	const struct device *timer;
 	uint32_t oscillator;
 	uint32_t rtc;
@@ -43,6 +44,8 @@ static unsigned int bank_domain(unsigned int bank)
 	case BANK_VO:
 	case BANK_VO_HDMI:
 		return A210_PD_VO;
+	case BANK_VP:
+		return A210_PD_VP;
 	default:
 		return A210_PD_TOP;
 	}
@@ -50,10 +53,22 @@ static unsigned int bank_domain(unsigned int bank)
 
 static bool accessible(const struct tree_config *c, unsigned int bank)
 {
-	unsigned int domain = bank_domain(bank);
-	uintptr_t status = domain == A210_PD_GPU ? c->gpu_status : c->vo_status;
+	uintptr_t status;
 
-	return domain == A210_PD_TOP || (sys_read32(status) & A210_PCU_STATE_MASK);
+	switch (bank_domain(bank)) {
+	case A210_PD_GPU:
+		status = c->gpu_status;
+		break;
+	case A210_PD_VO:
+		status = c->vo_status;
+		break;
+	case A210_PD_VP:
+		status = c->vp_status;
+		break;
+	default:
+		return true;
+	}
+	return (sys_read32(status) & A210_PCU_STATE_MASK) != 0;
 }
 
 static int word_index(unsigned int bank, unsigned int offset)
@@ -377,9 +392,11 @@ static const struct tree_config config = {
 			[BANK_PERI3] = DT_INST_REG_ADDR_BY_NAME(0, peri3),
 			[BANK_TEE] = DT_INST_REG_ADDR_BY_NAME(0, tee),
 			[BANK_AON] = DT_INST_REG_ADDR_BY_NAME(0, aon),
+			[BANK_VP] = DT_INST_REG_ADDR_BY_NAME(0, vp),
 		},
 	.gpu_status = DT_INST_PROP(0, gpu_status_reg),
 	.vo_status = DT_INST_PROP(0, vo_status_reg),
+	.vp_status = DT_INST_PROP(0, vp_status_reg),
 	.timer = DEVICE_DT_GET(DT_INST_PHANDLE(0, timeout_counter)),
 	.oscillator = DT_INST_PROP(0, clock_frequency),
 	.rtc = DT_INST_PROP(0, rtc_frequency),
