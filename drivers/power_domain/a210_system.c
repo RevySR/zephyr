@@ -7,6 +7,12 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/sys_io.h>
 
+#define SY70209_SYS_CONTROL   0x05
+#define SY70209_POWER_ON      BIT(7)
+#define GLOBAL_RESET_ENABLE   BIT(0)
+#define GLOBAL_RESET_REQUEST  BIT(0)
+#define TRANSITION_TIMEOUT_MS 100
+
 struct system_config {
 	uintptr_t enable, request;
 	struct i2c_dt_spec pmic;
@@ -19,15 +25,15 @@ int a210_system_request(const struct device *dev, uint32_t state)
 	uint32_t start, now;
 	int ret;
 
-	if (state == 0) {
-		ret = i2c_reg_update_byte_dt(&c->pmic, 0x05, BIT(7), 0);
+	if (state == A210_SYSTEM_SHUTDOWN) {
+		ret = i2c_reg_update_byte_dt(&c->pmic, SY70209_SYS_CONTROL, SY70209_POWER_ON, 0);
 		if (ret) {
 			return ret;
 		}
-	} else if (state == 1) {
-		sys_write32(sys_read32(c->enable) | BIT(0), c->enable);
+	} else if (state == A210_SYSTEM_COLD_RESET) {
+		sys_write32(sys_read32(c->enable) | GLOBAL_RESET_ENABLE, c->enable);
 		__asm__ volatile("fence iorw, iorw" ::: "memory");
-		sys_write32(BIT(0), c->request);
+		sys_write32(GLOBAL_RESET_REQUEST, c->request);
 		__asm__ volatile("fence iorw, iorw" ::: "memory");
 	} else {
 		return -ENOTSUP;
@@ -36,7 +42,8 @@ int a210_system_request(const struct device *dev, uint32_t state)
 	counter_get_value(c->timer, &start);
 	do {
 		counter_get_value(c->timer, &now);
-	} while ((uint32_t)(now - start) < counter_get_frequency(c->timer) / 10);
+	} while ((uint32_t)(now - start) <
+		 counter_get_frequency(c->timer) / (MSEC_PER_SEC / TRANSITION_TIMEOUT_MS));
 	return -EIO;
 }
 
@@ -53,4 +60,5 @@ static const struct system_config config = {
 	.pmic = I2C_DT_SPEC_GET(DT_INST_PHANDLE(0, pmic)),
 	.timer = DEVICE_DT_GET(DT_INST_PHANDLE(0, timeout_counter)),
 };
-DEVICE_DT_INST_DEFINE(0, init, NULL, NULL, &config, POST_KERNEL, 96, NULL);
+DEVICE_DT_INST_DEFINE(0, init, NULL, NULL, &config, POST_KERNEL,
+		      CONFIG_A210_SYSTEM_CONTROL_INIT_PRIORITY, NULL);

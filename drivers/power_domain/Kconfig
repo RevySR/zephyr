@@ -15,6 +15,11 @@ config A210_SYSTEM_CONTROL
 	help
 	  Request SY70209 system shutdown or the A210 global hardware reset.
 
+config A210_SYSTEM_CONTROL_INIT_PRIORITY
+	int "A210 system power controller initialization priority"
+	default 96
+	depends on A210_SYSTEM_CONTROL
+
 config POWER_DOMAIN_A210
 	bool "A210 peripheral power domains"
 	default y

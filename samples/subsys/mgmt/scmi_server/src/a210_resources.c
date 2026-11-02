@@ -227,7 +227,7 @@ void scmi_resources_poll(void)
 			       ? MIN(thermal_hits + 1, 2)
 			       : 0;
 	if (thermal_hits >= 2) {
-		(void)a210_system_request(system_controller, 0);
+		(void)a210_system_request(system_controller, A210_SYSTEM_SHUTDOWN);
 	}
 }
 
