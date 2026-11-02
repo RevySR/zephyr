@@ -187,7 +187,13 @@
 			 <&ap_clocks A210_CLK_USB20_A2X0_HCLK>,
 			 <&ap_clocks A210_CLK_USB20_A2X0_ACLK>,
 			 <&ap_clocks A210_CLK_USB20_A2X1_HCLK>,
-			 <&ap_clocks A210_CLK_USB20_A2X1_ACLK>;
+			 <&ap_clocks A210_CLK_USB20_A2X1_ACLK>,
+			 <&ap_clocks A210_CLK_VP_VDEC_ACLK_EN>,
+			 <&ap_clocks A210_CLK_VP_VDEC_CCLK_EN>,
+			 <&ap_clocks A210_CLK_VP_VDEC_PCLK_EN>,
+			 <&ap_clocks A210_CLK_VP_VENC_ACLK_EN>,
+			 <&ap_clocks A210_CLK_VP_VENC_CCLK_EN>,
+			 <&ap_clocks A210_CLK_VP_VENC_PCLK_EN>;
 		resets = <&ap_resets A210_RESET_UART_SRST(0)>,
 			 <&ap_resets A210_RESET_UART_SRST(1)>,
 			 <&ap_resets A210_RESET_UART_SRST(2)>,
@@ -331,7 +337,21 @@
 			 <&ap_resets A210_RESET_VO_HDMI_MAIN_RST>,
 			 <&ap_resets A210_RESET_VO_HDMI_PRST>,
 			 <&ap_resets A210_RESET_VO_X2H0_RST>,
-			 <&ap_resets A210_RESET_VO_X2H1_RST>;
+			 <&ap_resets A210_RESET_VO_X2H1_RST>,
+			 <&ap_resets A210_RESET_VP_VDEC_PRST>,
+			 <&ap_resets A210_RESET_VP_VDEC_CRST>,
+			 <&ap_resets A210_RESET_VP_VDEC_ARST>,
+			 <&ap_resets A210_RESET_VP_VENC_PRST>,
+			 <&ap_resets A210_RESET_VP_VENC_CRST>,
+			 <&ap_resets A210_RESET_VP_VENC_ARST>,
+			 <&ap_resets A210_RESET_VP_COMP_PRST>,
+			 <&ap_resets A210_RESET_VP_COMP_CRST>,
+			 <&ap_resets A210_RESET_VP_COMP_ARST>,
+			 <&ap_resets A210_RESET_VP_DECOMP_PRST>,
+			 <&ap_resets A210_RESET_VP_DECOMP_CRST>,
+			 <&ap_resets A210_RESET_VP_DECOMP_ARST>,
+			 <&ap_resets A210_RESET_VP_COMP_EXTPRST>,
+			 <&ap_resets A210_RESET_VP_DECOMP_EXTPRST>;
 	};
 };
 
@@ -388,6 +408,19 @@
 	status = "okay";
 };
 
+&a210_pd_vp {
+	vin-supply = <&vdd_vp>;
+	status = "okay";
+};
+
+&a210_pd_vdec {
+	status = "okay";
+};
+
+&a210_pd_venc {
+	status = "okay";
+};
+
 / {
 	zephyr,user {
 		power-domains = <&a210_pd_top>,
@@ -402,8 +435,10 @@
 				<&a210_pd_dmac>,
 				<&a210_pd_pwm>,
 				<&a210_pd_gmac0>,
-				<&a210_pd_gmac1>;
-		read-only-voltage-domains = <&vdd_cpu &vddm_cpu &vdd_cpu_p &vdd_gpu>;
+				<&a210_pd_gmac1>,
+				<&a210_pd_vdec>,
+				<&a210_pd_venc>;
+		read-only-voltage-domains = <&vdd_cpu &vddm_cpu &vdd_cpu_p &vdd_gpu &vdd_vp>;
 		/* Vendor AON firmware powers off at the 125 C PVT alarm. */
 		zhihe,critical-millicelsius = <125000>;
 	};
