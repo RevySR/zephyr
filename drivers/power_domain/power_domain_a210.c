@@ -18,24 +18,26 @@
 #define PCU_IRQ_STATUS   0x2c
 #define PCU_STATE        0x48
 #define DOMAIN_ON        0x1f
-#define GPU_DOMAIN       1
 #define VO_DOMAIN        2
 #define IOPMP_GROUPS     64
 #define IOPMP_WORDS      8
 #define IOPMP_ADDRESS(n) (0x800 + (n) * 0x20)
+#define IOPMP_DEVICES    4
 
 struct pd_config {
 	uintptr_t pcu, bpc, pca, iopmp;
-	const struct device *timer, *clocks, *resets, *supply;
+	const struct device *timer, *clocks, *resets, *supply, *parent;
 	const uint16_t *clock_ids, *reset_ids;
 	const uint32_t *ccus;
+	const uint8_t *iopmp_devices;
 	uint16_t clock_count, reset_count, ccu_count;
-	uint8_t id;
+	uint8_t id, iopmp_count;
 	bool always_on, retain_context;
 };
 
 struct pd_data {
 	bool on, rail, faulted;
+	uint8_t children;
 };
 
 static const struct device *domains[DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT)];
@@ -134,30 +136,38 @@ static int restore_iopmp(const struct pd_config *c)
 	return 0;
 }
 
-static int configure_gpu_iopmp(const struct pd_config *c)
+static bool iopmp_allows(uintptr_t iopmp, unsigned int group, uint32_t tag)
 {
-	unsigned int slots[2];
+	uintptr_t addr = iopmp + IOPMP_ADDRESS(group);
 
-	if (c->id != GPU_DOMAIN || !c->iopmp) {
-		return 0;
-	}
-	for (unsigned int i = 0; i < 2; i++) {
+	return sys_read32(iopmp + group * 4) == 0x0f0f && !sys_read32(addr) &&
+	       sys_read32(addr + 4) == tag && !sys_read32(addr + 8) &&
+	       sys_read32(addr + 12) == (tag | 0x20);
+}
+
+/* Give each listed master a TOR pair covering [0, 2^39). */
+static int configure_iopmp(const struct pd_config *c)
+{
+	unsigned int slots[IOPMP_DEVICES];
+
+	for (unsigned int i = 0; i < c->iopmp_count; i++) {
 		unsigned int free_slot = IOPMP_GROUPS;
-		uint32_t tag = (0x33 + i) << 14;
+		uint32_t tag = c->iopmp_devices[i] << 14;
 
 		slots[i] = IOPMP_GROUPS;
 		for (unsigned int group = 0; group < IOPMP_GROUPS; group++) {
-			uintptr_t addr = c->iopmp + IOPMP_ADDRESS(group);
-			uint32_t config = sys_read32(c->iopmp + group * 4);
+			bool taken = false;
 
-			if (i && group == slots[0]) {
+			for (unsigned int j = 0; j < i; j++) {
+				taken |= slots[j] == group;
+			}
+			if (taken) {
 				continue;
 			}
-			if (!config && free_slot == IOPMP_GROUPS) {
+			if (!sys_read32(c->iopmp + group * 4) && free_slot == IOPMP_GROUPS) {
 				free_slot = group;
 			}
-			if (config == 0x0f0f && !sys_read32(addr) && !sys_read32(addr + 8) &&
-			    sys_read32(addr + 4) == tag && sys_read32(addr + 12) == (tag | 0x20)) {
+			if (iopmp_allows(c->iopmp, group, tag)) {
 				slots[i] = group;
 				break;
 			}
@@ -169,9 +179,9 @@ static int configure_gpu_iopmp(const struct pd_config *c)
 			return -ENOSPC;
 		}
 	}
-	for (unsigned int i = 0; i < 2; i++) {
+	for (unsigned int i = 0; i < c->iopmp_count; i++) {
 		uintptr_t addr = c->iopmp + IOPMP_ADDRESS(slots[i]);
-		uint32_t tag = (0x33 + i) << 14;
+		uint32_t tag = c->iopmp_devices[i] << 14;
 
 		write_reg(c->iopmp + slots[i] * 4, 0);
 		write_reg(addr, 0);
@@ -179,9 +189,7 @@ static int configure_gpu_iopmp(const struct pd_config *c)
 		write_reg(addr + 8, 0);
 		write_reg(addr + 12, tag | 0x20);
 		write_reg(c->iopmp + slots[i] * 4, 0x0f0f);
-		if (sys_read32(c->iopmp + slots[i] * 4) != 0x0f0f || sys_read32(addr) ||
-		    sys_read32(addr + 4) != tag || sys_read32(addr + 8) ||
-		    sys_read32(addr + 12) != (tag | 0x20)) {
+		if (!iopmp_allows(c->iopmp, slots[i], tag)) {
 			for (unsigned int j = 0; j <= i; j++) {
 				write_reg(c->iopmp + slots[j] * 4, 0);
 			}
@@ -245,7 +253,7 @@ static int restore_context(const struct pd_config *c)
 		ret = restore_iopmp(c);
 	}
 	if (!ret) {
-		ret = configure_gpu_iopmp(c);
+		ret = configure_iopmp(c);
 	}
 	return ret;
 }
@@ -315,13 +323,37 @@ int a210_power_sync_clock(const struct device *clock, unsigned int id)
 	return 0;
 }
 
+/* A parent domain stays on while any child domain is on. */
+static int hold_parent(const struct device *dev, bool hold)
+{
+	const struct pd_config *c = dev->config;
+	struct pd_data *p;
+	int ret;
+
+	if (!c->parent) {
+		return 0;
+	}
+	p = c->parent->data;
+	if (hold ? p->children++ > 0 : --p->children > 0) {
+		return 0;
+	}
+	ret = a210_power_set_on(c->parent, hold);
+	if (ret && hold) {
+		p->children--;
+	}
+	return ret;
+}
+
 static int power_on(const struct device *dev)
 {
 	const struct pd_config *c = dev->config;
 	struct pd_data *d = dev->data;
 	unsigned int held = 0;
-	int ret = 0;
+	int ret = hold_parent(dev, true);
 
+	if (ret) {
+		return ret;
+	}
 	for (; held < c->clock_count; held++) {
 		ret = a210_clock_hold(c->clocks, c->clock_ids[held], true);
 		if (ret) {
@@ -351,6 +383,7 @@ unwind:
 	while (held) {
 		d->faulted |= a210_clock_hold(c->clocks, c->clock_ids[--held], false) != 0;
 	}
+	d->faulted |= hold_parent(dev, false) != 0;
 	return ret;
 }
 
@@ -362,6 +395,9 @@ static int power_off(const struct device *dev)
 
 	if (c->always_on) {
 		return -EACCES;
+	}
+	if (d->children) {
+		return -EBUSY;
 	}
 	ret = a210_clock_save_domain(c->clocks, c->id);
 	if (!ret) {
@@ -387,7 +423,7 @@ static int power_off(const struct device *dev)
 		}
 	}
 	d->on = false;
-	return 0;
+	return hold_parent(dev, false);
 }
 
 static int pm_action(const struct device *dev, enum pm_device_action action)
@@ -446,12 +482,19 @@ static int init(const struct device *dev)
 
 #define CLOCK_ID(node, prop, i) DT_CLOCKS_CELL_BY_IDX(node, i, id),
 #define RESET_ID(node, prop, i) DT_RESET_ID_BY_IDX(node, i),
+#define PARENT(node)                                                                               \
+	COND_CODE_1(DT_NODE_HAS_PROP(node, power_domains), \
+	(DEVICE_DT_GET(DT_PHANDLE(node, power_domains))), (NULL))
 #define SUPPLY(node)                                                                               \
 	COND_CODE_1(DT_NODE_HAS_PROP(node, vin_supply), \
 	(DEVICE_DT_GET(DT_PHANDLE(node, vin_supply))), (NULL))
 #define DEFINE_PD(node)                                                                            \
 	BUILD_ASSERT(DT_PROP(node, domain_id) < ARRAY_SIZE(domains),                               \
 		     "A210 power domain IDs must be dense");                                       \
+	BUILD_ASSERT(DT_PROP_LEN_OR(node, zhihe_iopmp_devices, 0) <= IOPMP_DEVICES &&              \
+		     (!DT_NODE_HAS_PROP(node, zhihe_iopmp_devices) ||                              \
+		      DT_REG_HAS_NAME(node, iopmp)),                                               \
+		     "A210 IOPMP devices need an iopmp region");                                   \
 	static const uint16_t clocks_##node[] = {                                                  \
 		0, COND_CODE_1(DT_NODE_HAS_PROP(node, clocks), \
 			(DT_FOREACH_PROP_ELEM(node, clocks, CLOCK_ID)), ())}; \
@@ -459,6 +502,7 @@ static int init(const struct device *dev)
 		0, COND_CODE_1(DT_NODE_HAS_PROP(node, resets), \
 			(DT_FOREACH_PROP_ELEM(node, resets, RESET_ID)), ())}; \
 	static const uint32_t ccus_##node[] = DT_PROP_OR(node, zhihe_ccu_config, {0});             \
+	static const uint8_t iopmp_##node[] = DT_PROP_OR(node, zhihe_iopmp_devices, {0});          \
 	static const struct pd_config config_##node = {                                            \
 		.pcu = DT_REG_ADDR_BY_NAME_OR(node, pcu, 0),                                       \
 		.bpc = DT_REG_ADDR_BY_NAME_OR(node, bpc, 0),                                       \
@@ -468,6 +512,7 @@ static int init(const struct device *dev)
 		.clocks = DEVICE_DT_GET(DT_PHANDLE(node, zhihe_clock_controller)),                 \
 		.resets = DEVICE_DT_GET(DT_PHANDLE(node, zhihe_reset_controller)),                 \
 		.supply = SUPPLY(node),                                                            \
+		.parent = PARENT(node),                                                            \
 		.id = DT_PROP(node, domain_id),                                                    \
 		.always_on = DT_PROP(node, always_on),                                             \
 		.retain_context = DT_PROP(node, zhihe_retain_context),                             \
@@ -477,6 +522,8 @@ static int init(const struct device *dev)
 		.reset_count = ARRAY_SIZE(resets_##node) - 1,                                      \
 		.ccus = ccus_##node,                                                               \
 		.ccu_count = DT_PROP_LEN_OR(node, zhihe_ccu_config, 0),                            \
+		.iopmp_devices = iopmp_##node,                                                     \
+		.iopmp_count = DT_PROP_LEN_OR(node, zhihe_iopmp_devices, 0),                       \
 	};                                                                                         \
 	static struct pd_data data_##node;                                                         \
 	PM_DEVICE_DT_DEFINE(node, pm_action);                                                      \

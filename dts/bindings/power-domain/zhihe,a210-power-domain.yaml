@@ -32,6 +32,14 @@ properties:
     required: true
   vin-supply:
     type: phandle
+  zhihe,iopmp-devices:
+    type: array
+    description: |
+      IOPMP device IDs given access to all memory whenever the domain is
+      powered on.
+  power-domains:
+    description: |
+      Parent domain. It is powered on while any of its child domains is on.
   zhihe,ccu-config:
     type: array
     description: |

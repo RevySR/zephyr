@@ -48,6 +48,7 @@
 		clocks = <&ap_clocks A210_CLK_TOP_GPU_CORE_CLK_DIV>,
 			 <&ap_clocks A210_CLK_SW_PWR_WRAP_GPU_SYS_CLK_EN>,
 			 <&ap_clocks A210_CLK_SW_PWR_WRAP_DFMU_CORE_CLK_EN>;
+		zhihe,iopmp-devices = <0x33 0x34>;
 		status = "disabled";
 	};
 
