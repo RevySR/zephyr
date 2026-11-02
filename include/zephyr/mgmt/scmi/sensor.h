@@ -3,6 +3,15 @@
 #define ZEPHYR_INCLUDE_MGMT_SCMI_SENSOR_H_
 
 #include <zephyr/mgmt/scmi/server.h>
+#include <zephyr/sys/util.h>
+
+/* Sensor types, the unit of a reported value. */
+#define SCMI_SENSOR_TYPE_DEGREES_C 2U
+#define SCMI_SENSOR_TYPE_VOLTS     5U
+
+/* SENSOR_CONFIG_GET/SET fields. */
+#define SCMI_SENSOR_CONFIG_ENABLED  BIT(0)
+#define SCMI_SENSOR_CONFIG_RESERVED GENMASK(8, 2)
 
 struct scmi_sensor {
 	const char *name;
