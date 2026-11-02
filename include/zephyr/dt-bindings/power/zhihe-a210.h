@@ -15,8 +15,12 @@
 #define A210_PD_GMAC0 11
 #define A210_PD_GMAC1 12
 #define A210_PD_VP    13
+#define A210_PD_VDEC  14
+#define A210_PD_VENC  15
 
 /* IOPMP master IDs. */
+#define A210_IOPMP_VENC   0x26
+#define A210_IOPMP_VDEC   0x27
 #define A210_IOPMP_GPU_MT 0x33
 #define A210_IOPMP_GPU    0x34
 #endif

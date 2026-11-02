@@ -286,6 +286,68 @@
 		status = "disabled";
 	};
 
+	a210_pd_vp: power-domain@6bf8000 {
+		compatible = "zhihe,a210-power-domain";
+		reg = <0x6bf8000 0x200>, <0x6bfb000 0x200>, <0x6bf9000 0x200>, <0x26b12000 0x1000>;
+		reg-names = "pcu", "pca", "bpc", "iopmp";
+		domain-id = <A210_PD_VP>;
+		domain-name = "vp";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		#power-domain-cells = <0>;
+		resets = <&ap_resets A210_RESET_VP_COMP_PRST>,
+			 <&ap_resets A210_RESET_VP_COMP_CRST>,
+			 <&ap_resets A210_RESET_VP_COMP_ARST>,
+			 <&ap_resets A210_RESET_VP_DECOMP_PRST>,
+			 <&ap_resets A210_RESET_VP_DECOMP_CRST>,
+			 <&ap_resets A210_RESET_VP_DECOMP_ARST>,
+			 <&ap_resets A210_RESET_VP_COMP_EXTPRST>,
+			 <&ap_resets A210_RESET_VP_DECOMP_EXTPRST>;
+		zhihe,iopmp-devices = <A210_IOPMP_VENC A210_IOPMP_VDEC>;
+		status = "disabled";
+	};
+
+	a210_pd_vdec: power-domain@6bf5000 {
+		compatible = "zhihe,a210-power-domain";
+		reg = <0x6bf5000 0x200>, <0x6bf6000 0x200>;
+		reg-names = "pcu", "bpc";
+		domain-id = <A210_PD_VDEC>;
+		domain-name = "vdec";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		power-domains = <&a210_pd_vp>;
+		#power-domain-cells = <0>;
+		clocks = <&ap_clocks A210_CLK_VP_VDEC_ACLK_EN>,
+			 <&ap_clocks A210_CLK_VP_VDEC_CCLK_EN>,
+			 <&ap_clocks A210_CLK_VP_VDEC_PCLK_EN>;
+		resets = <&ap_resets A210_RESET_VP_VDEC_PRST>,
+			 <&ap_resets A210_RESET_VP_VDEC_CRST>,
+			 <&ap_resets A210_RESET_VP_VDEC_ARST>;
+		status = "disabled";
+	};
+
+	a210_pd_venc: power-domain@6bf2000 {
+		compatible = "zhihe,a210-power-domain";
+		reg = <0x6bf2000 0x200>, <0x6bf3000 0x200>;
+		reg-names = "pcu", "bpc";
+		domain-id = <A210_PD_VENC>;
+		domain-name = "venc";
+		timeout-counter = <&aon_timebase>;
+		zhihe,clock-controller = <&ap_clocks>;
+		zhihe,reset-controller = <&ap_resets>;
+		power-domains = <&a210_pd_vp>;
+		#power-domain-cells = <0>;
+		clocks = <&ap_clocks A210_CLK_VP_VENC_ACLK_EN>,
+			 <&ap_clocks A210_CLK_VP_VENC_CCLK_EN>,
+			 <&ap_clocks A210_CLK_VP_VENC_PCLK_EN>;
+		resets = <&ap_resets A210_RESET_VP_VENC_PRST>,
+			 <&ap_resets A210_RESET_VP_VENC_CRST>,
+			 <&ap_resets A210_RESET_VP_VENC_ARST>;
+		status = "disabled";
+	};
+
 	ap_clocks: clock-controller@260000 {
 		compatible = "zhihe,a210-clock-tree";
 		reg = <0x00260000 0x1000>,
