@@ -15,6 +15,8 @@
 #include "resources.h"
 
 #define USER DT_PATH(zephyr_user)
+/* The PVT reports millidegrees Celsius and millivolts. */
+#define SENSOR_SCALE_MILLI (-3)
 static const struct device *const clocks = DEVICE_DT_GET(DT_CLOCKS_CTLR_BY_IDX(USER, 0));
 static const struct device *const resets = DEVICE_DT_GET(DT_RESET_CTLR_BY_IDX(USER, 0));
 static const struct device *const pvt = DEVICE_DT_GET(DT_NODELABEL(pvt));
@@ -198,16 +200,16 @@ static int sensor_read(void *context, int64_t *value)
 
 static int sensor_get_config(void *context, uint32_t *config)
 {
-	*config = !!(sensor_enabled & BIT((uintptr_t)context));
+	*config = (sensor_enabled & BIT((uintptr_t)context)) ? SCMI_SENSOR_CONFIG_ENABLED : 0;
 	return 0;
 }
 
 static int sensor_set_config(void *context, uint32_t config)
 {
-	if (config & 0x1fc) {
+	if (config & SCMI_SENSOR_CONFIG_RESERVED) {
 		return -EINVAL;
 	}
-	if (config & ~1U) {
+	if (config & ~SCMI_SENSOR_CONFIG_ENABLED) {
 		return -ENOTSUP;
 	}
 	/* Sampling remains active for the firmware's own monitoring. */
@@ -229,8 +231,8 @@ static int sensor_lookup(void *context, uint32_t id, struct scmi_sensor *sensor,
 	*sensor = (struct scmi_sensor){
 		.name = name,
 		.context = (void *)(uintptr_t)id,
-		.type = temperature ? 2 : 5,
-		.scale = -3,
+		.type = temperature ? SCMI_SENSOR_TYPE_DEGREES_C : SCMI_SENSOR_TYPE_VOLTS,
+		.scale = SENSOR_SCALE_MILLI,
 		.read = sensor_read,
 		.get_config = sensor_get_config,
 		.set_config = sensor_set_config,
