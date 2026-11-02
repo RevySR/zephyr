@@ -5,6 +5,8 @@ include: [base.yaml, reset-controller.yaml]
 properties:
   reg:
     required: true
+  reg-names:
+    required: true
   gpu-status-reg:
     type: int
     required: true

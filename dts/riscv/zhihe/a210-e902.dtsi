@@ -325,6 +325,8 @@
 		      <0x08000100 0x40>,
 		      <0x06720400 0x40>,
 		      <0x30842010 0x4>;
+		reg-names = "gpu", "pcie", "peri0", "peri1", "peri2", "peri3", "tee", "usb", "vo",
+			    "aon";
 		gpu-status-reg = <0x06e00048>;
 		vo-status-reg = <0x067f0048>;
 		#reset-cells = <1>;

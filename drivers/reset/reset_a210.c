@@ -2,12 +2,28 @@
 #define DT_DRV_COMPAT zhihe_a210_reset
 
 #include <zephyr/drivers/reset.h>
+#include <zephyr/drivers/power_domain/a210.h>
 #include <zephyr/drivers/reset/a210.h>
+#include <zephyr/dt-bindings/power/zhihe-a210.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/sys_io.h>
 #include <zephyr/sys/util.h>
 
-#define RESET_BANKS DT_NUM_REGS(DT_DRV_INST(0))
+/* Register banks, matching the reset controller reg-names. */
+enum reset_bank {
+	BANK_GPU,
+	BANK_PCIE,
+	BANK_PERI0,
+	BANK_PERI1,
+	BANK_PERI2,
+	BANK_PERI3,
+	BANK_TEE,
+	BANK_USB,
+	BANK_VO,
+	BANK_AON,
+	RESET_BANKS,
+};
+
 #define RESET_WORDS 16
 
 struct a210_reset_line {
@@ -31,15 +47,22 @@ struct reset_data {
 
 static unsigned int bank_domain(unsigned int bank)
 {
-	return bank == 0 ? 1 : (bank == 8 ? 2 : 0);
+	switch (bank) {
+	case BANK_GPU:
+		return A210_PD_GPU;
+	case BANK_VO:
+		return A210_PD_VO;
+	default:
+		return A210_PD_TOP;
+	}
 }
 
 static bool accessible(const struct reset_config *c, unsigned int bank)
 {
 	unsigned int domain = bank_domain(bank);
-	uintptr_t status = domain == 1 ? c->gpu_status : c->vo_status;
+	uintptr_t status = domain == A210_PD_GPU ? c->gpu_status : c->vo_status;
 
-	return !domain || (sys_read32(status) & 0x1f);
+	return domain == A210_PD_TOP || (sys_read32(status) & A210_PCU_STATE_MASK);
 }
 
 static uint32_t read_register(const struct device *dev, unsigned int bank, unsigned int offset)
@@ -48,7 +71,7 @@ static uint32_t read_register(const struct device *dev, unsigned int bank, unsig
 	struct reset_data *d = dev->data;
 
 	return accessible(c, bank) ? sys_read32(c->base[bank] + offset)
-				   : d->values[bank][offset / 4];
+				   : d->values[bank][offset / sizeof(uint32_t)];
 }
 
 static int update_register(const struct device *dev, unsigned int bank, unsigned int offset,
@@ -66,8 +89,8 @@ static int update_register(const struct device *dev, unsigned int bank, unsigned
 			return -EIO;
 		}
 	}
-	d->values[bank][offset / 4] = value;
-	d->masks[bank][offset / 4] |= mask;
+	d->values[bank][offset / sizeof(uint32_t)] = value;
+	d->masks[bank][offset / sizeof(uint32_t)] |= mask;
 	return 0;
 }
 
@@ -119,8 +142,9 @@ int a210_reset_save_domain(const struct device *dev, unsigned int domain)
 		if (!accessible(c, bank)) {
 			return -EACCES;
 		}
-		d->values[bank][line->offset / 4] = read_register(dev, bank, line->offset);
-		d->masks[bank][line->offset / 4] |= BIT(line->bit);
+		d->values[bank][line->offset / sizeof(uint32_t)] =
+			read_register(dev, bank, line->offset);
+		d->masks[bank][line->offset / sizeof(uint32_t)] |= BIT(line->bit);
 	}
 	return 0;
 }
@@ -138,17 +162,17 @@ int a210_reset_restore_domain(const struct device *dev, unsigned int domain)
 			return -EACCES;
 		}
 		for (unsigned int word = 0; word < RESET_WORDS; word++) {
+			uintptr_t reg = c->base[bank] + word * sizeof(uint32_t);
 			uint32_t mask = d->masks[bank][word];
 			uint32_t value;
 
 			if (!mask) {
 				continue;
 			}
-			value = (sys_read32(c->base[bank] + word * 4) & ~mask) |
-				(d->values[bank][word] & mask);
-			sys_write32(value, c->base[bank] + word * 4);
+			value = (sys_read32(reg) & ~mask) | (d->values[bank][word] & mask);
+			sys_write32(value, reg);
 			__asm__ volatile("fence iorw, iorw" ::: "memory");
-			if ((sys_read32(c->base[bank] + word * 4) & mask) != (value & mask)) {
+			if ((sys_read32(reg) & mask) != (value & mask)) {
 				return -EIO;
 			}
 		}
@@ -162,11 +186,22 @@ static DEVICE_API(reset, api) = {
 	.line_deassert = deassert_reset,
 };
 
-#define RESET_BASE(i, _) DT_INST_REG_ADDR_BY_IDX(0, i)
 static const struct reset_config config = {
-	.base = {LISTIFY(RESET_BANKS, RESET_BASE, (,), _)},
-		 .gpu_status = DT_INST_PROP(0, gpu_status_reg),
-		 .vo_status = DT_INST_PROP(0, vo_status_reg),
+	.base =
+		{
+			[BANK_GPU] = DT_INST_REG_ADDR_BY_NAME(0, gpu),
+			[BANK_PCIE] = DT_INST_REG_ADDR_BY_NAME(0, pcie),
+			[BANK_PERI0] = DT_INST_REG_ADDR_BY_NAME(0, peri0),
+			[BANK_PERI1] = DT_INST_REG_ADDR_BY_NAME(0, peri1),
+			[BANK_PERI2] = DT_INST_REG_ADDR_BY_NAME(0, peri2),
+			[BANK_PERI3] = DT_INST_REG_ADDR_BY_NAME(0, peri3),
+			[BANK_TEE] = DT_INST_REG_ADDR_BY_NAME(0, tee),
+			[BANK_USB] = DT_INST_REG_ADDR_BY_NAME(0, usb),
+			[BANK_VO] = DT_INST_REG_ADDR_BY_NAME(0, vo),
+			[BANK_AON] = DT_INST_REG_ADDR_BY_NAME(0, aon),
+		},
+	.gpu_status = DT_INST_PROP(0, gpu_status_reg),
+	.vo_status = DT_INST_PROP(0, vo_status_reg),
 };
 static struct reset_data data;
 DEVICE_DT_INST_DEFINE(0, NULL, NULL, &data, &config, PRE_KERNEL_1, CONFIG_RESET_INIT_PRIORITY,
