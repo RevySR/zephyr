@@ -21,6 +21,7 @@ enum reset_bank {
 	BANK_USB,
 	BANK_VO,
 	BANK_AON,
+	BANK_VP,
 	RESET_BANKS,
 };
 
@@ -38,6 +39,7 @@ struct reset_config {
 	uintptr_t base[RESET_BANKS];
 	uintptr_t gpu_status;
 	uintptr_t vo_status;
+	uintptr_t vp_status;
 };
 
 struct reset_data {
@@ -52,6 +54,8 @@ static unsigned int bank_domain(unsigned int bank)
 		return A210_PD_GPU;
 	case BANK_VO:
 		return A210_PD_VO;
+	case BANK_VP:
+		return A210_PD_VP;
 	default:
 		return A210_PD_TOP;
 	}
@@ -59,10 +63,22 @@ static unsigned int bank_domain(unsigned int bank)
 
 static bool accessible(const struct reset_config *c, unsigned int bank)
 {
-	unsigned int domain = bank_domain(bank);
-	uintptr_t status = domain == A210_PD_GPU ? c->gpu_status : c->vo_status;
+	uintptr_t status;
 
-	return domain == A210_PD_TOP || (sys_read32(status) & A210_PCU_STATE_MASK);
+	switch (bank_domain(bank)) {
+	case A210_PD_GPU:
+		status = c->gpu_status;
+		break;
+	case A210_PD_VO:
+		status = c->vo_status;
+		break;
+	case A210_PD_VP:
+		status = c->vp_status;
+		break;
+	default:
+		return true;
+	}
+	return (sys_read32(status) & A210_PCU_STATE_MASK) != 0;
 }
 
 static uint32_t read_register(const struct device *dev, unsigned int bank, unsigned int offset)
@@ -199,9 +215,11 @@ static const struct reset_config config = {
 			[BANK_USB] = DT_INST_REG_ADDR_BY_NAME(0, usb),
 			[BANK_VO] = DT_INST_REG_ADDR_BY_NAME(0, vo),
 			[BANK_AON] = DT_INST_REG_ADDR_BY_NAME(0, aon),
+			[BANK_VP] = DT_INST_REG_ADDR_BY_NAME(0, vp),
 		},
 	.gpu_status = DT_INST_PROP(0, gpu_status_reg),
 	.vo_status = DT_INST_PROP(0, vo_status_reg),
+	.vp_status = DT_INST_PROP(0, vp_status_reg),
 };
 static struct reset_data data;
 DEVICE_DT_INST_DEFINE(0, NULL, NULL, &data, &config, PRE_KERNEL_1, CONFIG_RESET_INIT_PRIORITY,

@@ -326,11 +326,13 @@
 		      <0x27420400 0x40>,
 		      <0x08000100 0x40>,
 		      <0x06720400 0x40>,
-		      <0x30842010 0x4>;
+		      <0x30842010 0x4>,
+		      <0x06b20400 0x40>;
 		reg-names = "gpu", "pcie", "peri0", "peri1", "peri2", "peri3", "tee", "usb", "vo",
-			    "aon";
+			    "aon", "vp";
 		gpu-status-reg = <0x06e00048>;
 		vo-status-reg = <0x067f0048>;
+		vp-status-reg = <0x06bf8048>;
 		#reset-cells = <1>;
 		status = "disabled";
 	};

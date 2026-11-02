@@ -13,6 +13,9 @@ properties:
   vo-status-reg:
     type: int
     required: true
+  vp-status-reg:
+    type: int
+    required: true
   "#reset-cells":
     const: 1
 reset-cells:
